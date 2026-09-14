@@ -60,8 +60,9 @@ svg{display:block}
 .view.active .card{animation:fadeUp .35s ease both}
 
 /* ============ 页头 ============ */
-.ph{display:flex;align-items:flex-end;justify-content:space-between;margin:6px 2px 16px}
-.ph h1{margin:0;font-family:var(--serif);font-size:23px;font-weight:700;letter-spacing:.5px}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;margin:6px 2px 16px;flex-wrap:wrap;row-gap:10px}
+.ph h1{margin:0;font-family:var(--serif);font-size:23px;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.ph .seg{margin-left:auto}
 .ph .sub{margin-top:3px;color:var(--ink2);font-size:12px;display:flex;align-items:center;gap:6px}
 .ph-right{display:flex;align-items:center;gap:8px}
 .mode-seg{display:inline-flex;background:var(--seg);border-radius:10px;padding:2px;gap:2px}
@@ -217,7 +218,8 @@ svg{display:block}
 .fab svg{width:24px;height:24px}
 
 /* ============ 计时 ============ */
-.mode-seg{display:flex;justify-content:center;margin-bottom:14px}
+.mode-seg{display:flex;justify-content:center;margin-bottom:14px;background:none;padding:0;gap:0}
+.mode-seg .seg{flex:none;width:auto}
 .mode-seg .seg button{padding:8px 22px;font-size:13px}
 .timer-card{text-align:center;position:relative;padding:22px 16px 18px}
 .ring-wrap{position:relative;width:250px;height:250px;margin:0 auto}
@@ -372,6 +374,7 @@ svg{display:block}
 .switch i::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.3);transition:transform .2s}
 .switch input:checked+i{background:var(--seal);border-color:var(--seal)}
 .switch input:checked+i::after{transform:translateX(16px)}
+.nsub{border-left:2px solid var(--line);padding:2px 0 4px 12px;margin:2px 0 2px;border-radius:0}
 .auto-times{display:flex;gap:8px;margin-top:10px}
 .fld .auto-times label{flex:1;margin:0;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);background:var(--seg);border-radius:10px;padding:8px 10px}
 .auto-times input[type=time]{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:5px 8px;font-size:13px;font-family:var(--sans)}
@@ -678,6 +681,21 @@ html,body{overscroll-behavior-y:contain}
         <p class="theme-note" id="themeNote"></p>
       </div>
       <div class="fld">
+        <label>系统通知</label>
+        <div class="theme-top">
+          <label class="switch-row"><span class="switch-label">总开关</span><span class="switch"><input type="checkbox" data-notify id="notifyChk"><i></i></span></label>
+        </div>
+        <div id="notifySubs" hidden>
+          <div class="nsub">
+            <div class="theme-top"><label class="switch-row"><span class="switch-label">每日打卡提醒</span><span class="switch"><input type="checkbox" data-remind id="remindChk"><i></i></span></label></div>
+            <div class="auto-times" id="remindTimes"><label><span>提醒时间</span><input type="time" data-remind-time id="remindT"></label></div>
+          </div>
+          <div class="theme-top" style="margin-top:4px"><label class="switch-row"><span class="switch-label">番茄钟提醒</span><span class="switch"><input type="checkbox" data-pomo id="pomoChk"><i></i></span></label></div>
+          <div class="theme-top" style="margin-top:4px"><label class="switch-row"><span class="switch-label">任务到点提醒</span><span class="switch"><input type="checkbox" data-task id="taskChk"><i></i></span></label></div>
+        </div>
+        <p class="theme-note" id="notifyNote"></p>
+      </div>
+      <div class="fld">
         <label>数据管理</label>
         <p style="font-size:13px;color:var(--ink2);margin:0">所有数据均保存在本机浏览器，考公与考研两个模式的数据独立保存。完成一个阶段后：先导出总结留档 → 再导出备份 → 最后重置重新开始；换设备时用「导入数据」选择备份文件即可恢复。</p>
         <div class="data-tip">※ 导出总结仅生成可读文本文档，用于查看和存档，<b>不能作为导入数据使用</b>；只有「导出备份」生成的 .json 文件（含考公+考研全部数据）可用于导入。重置数据只清空<b>当前模式</b>，不会影响另一模式。</div>
@@ -821,7 +839,7 @@ function seedMode(){
   return {exam:{name:'',date:'',start:''},checkins:[],tasks:[],records:[],notes:[],reviews:[]};
 }
 function seedStore(){
-  return {mode:'gongkao',chosen:null,theme:'white',autoDark:{on:false,onT:'22:00',offT:'06:00'},quoteIdx:null,lastView:null,gongkao:seedMode(),kaoyan:seedMode()};
+  return {mode:'gongkao',chosen:null,theme:'white',autoDark:{on:false,onT:'22:00',offT:'06:00'},notify:{on:false,pomo:true,task:true},remind:{on:false,time:'20:00'},remindSent:'',taskSent:{},quoteIdx:null,lastView:null,gongkao:seedMode(),kaoyan:seedMode()};
 }
 function normalizeModeData(d){
   if(!d||typeof d!=='object')d={};
@@ -837,13 +855,17 @@ let store=(()=>{
       const d=JSON.parse(raw);
       if(d&&d.gongkao&&d.kaoyan){
         if(!d.autoDark)d.autoDark={on:false,onT:'22:00',offT:'06:00'};
+        if(!d.notify)d.notify={on:false,pomo:true,task:true};
+        if(!d.remind)d.remind={on:false,time:'20:00'};
+        if(typeof d.remindSent!=='string')d.remindSent='';
+        if(!d.taskSent||typeof d.taskSent!=='object')d.taskSent={};
         d.mode=(d.mode==='kaoyan')?'kaoyan':'gongkao';
         d.gongkao=normalizeModeData(d.gongkao);
         d.kaoyan=normalizeModeData(d.kaoyan);
         return d;
       }
       if(d&&Array.isArray(d.tasks)){
-        return {mode:'gongkao',chosen:'gongkao',theme:d.theme||'white',autoDark:d.autoDark||{on:false,onT:'22:00',offT:'06:00'},quoteIdx:(d.quoteIdx==null?null:d.quoteIdx),lastView:d.lastView||null,
+        return {mode:'gongkao',chosen:'gongkao',theme:d.theme||'white',autoDark:d.autoDark||{on:false,onT:'22:00',offT:'06:00'},notify:d.notify||{on:false,pomo:true,task:true},remind:d.remind||{on:false,time:'20:00'},remindSent:typeof d.remindSent==='string'?d.remindSent:'',taskSent:d.taskSent||{},quoteIdx:(d.quoteIdx==null?null:d.quoteIdx),lastView:d.lastView||null,
           gongkao:normalizeModeData({exam:d.exam,checkins:d.checkins,tasks:d.tasks,records:d.records,notes:d.notes,reviews:d.reviews}),
           kaoyan:seedMode()};
       }
@@ -1242,7 +1264,9 @@ function tick(){
     if(T.left<=0){
       if(T.phase==='focus'){
         addRecord(workMin,'番茄');T.phase='break';T.total=5*60;T.left=T.total;toast('番茄完成，休息 5 分钟');
-      }else{T.phase='focus';T.total=workMin*60;T.left=T.total;toast('休息结束，开始新的专注');}
+        if(store.notify&&store.notify.on&&store.notify.pomo)sysNotify('番茄完成','专注 '+workMin+' 分钟达成，休息 5 分钟，喝口水放松一下～','pomo-focus');
+      }else{T.phase='focus';T.total=workMin*60;T.left=T.total;toast('休息结束，开始新的专注');
+        if(store.notify&&store.notify.on&&store.notify.pomo)sysNotify('休息结束','休息完毕，开始新的专注吧！','pomo-break');}
     }
   }else T.free++;
   renderTimerUI(false);
@@ -1496,6 +1520,22 @@ function updateTitle(){
 }
 
 /* ==================== 设置（重置数据） ==================== */
+function notifPermState(){
+  if(!('Notification' in window))return {code:'nosupport',txt:'当前浏览器不支持系统通知。'};
+  const p=Notification.permission;
+  if(p==='granted')return {code:'granted',txt:'通知权限已开启，到点会通过系统通知栏提醒你。'};
+  if(p==='denied')return {code:'denied',txt:'通知权限已被拒绝，请在浏览器地址栏的权限设置中允许本站通知。'};
+  return {code:'default',txt:'首次开启会请求浏览器通知权限，授权后到点通过系统通知栏提醒。'};
+}
+function sysNotify(title,body,tag){
+  try{
+    if(!store.notify||!store.notify.on)return false;
+    if(!('Notification' in window)||Notification.permission!=='granted')return false;
+    new Notification(title,{body,tag,icon:ICON_DATA});
+    return true;
+  }catch(e){return false;}
+}
+const ICON_DATA='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" rx="24" fill="#C0392B"/><text x="48" y="66" font-size="52" text-anchor="middle" fill="#fff" font-family="serif" font-weight="900">岸</text></svg>');
 function renderSettings(){
   const ad=store.autoDark||{on:false,onT:'22:00',offT:'06:00'};
   const darkNow=autoDarkActive();
@@ -1505,6 +1545,52 @@ function renderSettings(){
   const offT=$('#adOffT');if(offT)offT.value=ad.offT||'06:00';
   const note=$('#themeNote');if(note)note.textContent=ad.on?(darkNow?('当前 '+ad.onT+' — '+ad.offT+' 时段，已自动启用暗夜主题'):('将在 '+ad.onT+' 自动切换暗夜主题，'+ad.offT+' 自动退出')):'主题仅改变外观配色，不会影响任务、笔记等任何数据。';
   const pk=$('#themePicks');if(pk)pk.innerHTML=themePickerHtml();
+
+  const nf=store.notify||{on:false,pomo:true,task:true};
+  const nc=$('#notifyChk');if(nc)nc.checked=!!nf.on;
+  const ns=$('#notifySubs');if(ns)ns.hidden=!nf.on;
+  const rm=store.remind||{on:false,time:'20:00'};
+  const rc=$('#remindChk');if(rc)rc.checked=!!rm.on;
+  const rt=$('#remindTimes');if(rt)rt.hidden=!rm.on;
+  const rT=$('#remindT');if(rT)rT.value=rm.time||'20:00';
+  const pc=$('#pomoChk');if(pc)pc.checked=!!nf.pomo;
+  const tc=$('#taskChk');if(tc)tc.checked=!!nf.task;
+  const nn=$('#notifyNote');if(nn)nn.textContent=notifPermState().txt+(nf.on?(' 每日打卡'+(rm.on?'已开':'未开')+' · 番茄钟'+(nf.pomo?'已开':'未开')+' · 任务到点'+(nf.task?'已开':'未开')+'。'):'');
+}
+function checkReminder(){
+  try{
+    const rm=store.remind||{on:false,time:'20:00'};
+    if(!store.notify||!store.notify.on||!rm.on)return;
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    if(app.checkins.includes(todayStr()))return;
+    const today=todayStr();
+    if(store.remindSent===today)return;
+    const nowH=new Date().getHours(),nowM=new Date().getMinutes();
+    const hh=(nowH<10?'0':'')+nowH,mm=(nowM<10?'0':'')+nowM;
+    if(hh+':'+mm<rm.time)return;
+    store.remindSent=today;save();
+    sysNotify('上岸助手','今天还没有打卡，别忘了记录今日的学习进度，坚持就是胜利！','daily-checkin');
+  }catch(e){}
+}
+function checkTaskReminders(){
+  try{
+    if(!store.notify||!store.notify.on||!store.notify.task)return;
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    const today=todayStr();
+    const nowH=new Date().getHours(),nowM=new Date().getMinutes();
+    const now=(nowH<10?'0':'')+nowH+':'+(nowM<10?'0':'')+nowM;
+    (app.tasks||[]).forEach(x=>{
+      if(!x.remind||!taskVisibleOn(x,today))return;
+      if(taskDoneOn(x,today))return;
+      if(x.remind>now)return;
+      const key=x.id+'_'+today;
+      if(store.taskSent&&store.taskSent[key])return;
+      if(!store.taskSent)store.taskSent={};
+      store.taskSent[key]=true;
+      sysNotify('任务提醒','「'+x.title+'」到点了，完成它再休息吧！','task-'+key);
+    });
+    if(store.taskSent)save();
+  }catch(e){}
 }
 function resetData(){
   const nm=store.mode==='kaoyan'?'考研':'考公';
@@ -1782,6 +1868,46 @@ document.addEventListener('change',e=>{
     store.autoDark[t.dataset.adTime==='on'?'onT':'offT']=t.value;save();
     refreshAutoDark();
     renderSettings();
+  }else if(t.matches('[data-notify]')){
+    if(!('Notification' in window)){toast('当前浏览器不支持系统通知');renderSettings();return;}
+    if(t.checked&&Notification.permission==='default'){
+      Notification.requestPermission().then(p=>{
+        if(p==='granted'){
+          if(!store.notify)store.notify={on:false,pomo:true,task:true};
+          store.notify.on=true;save();
+          toast('系统通知已开启');
+          checkReminder();checkTaskReminders();
+        }else{
+          toast('未获得通知权限，请在浏览器设置中允许');
+        }
+        renderSettings();
+      });
+      return;
+    }
+    if(t.checked&&Notification.permission==='denied'){
+      toast('通知权限被拒绝，请在浏览器设置中允许本站通知');
+      renderSettings();
+      return;
+    }
+    if(!store.notify)store.notify={on:false,pomo:true,task:true};
+    store.notify.on=t.checked;save();
+    if(t.checked){checkReminder();checkTaskReminders();}
+    renderSettings();
+  }else if(t.matches('[data-pomo]')){
+    if(!store.notify)store.notify={on:false,pomo:true,task:true};
+    store.notify.pomo=t.checked;save();renderSettings();
+  }else if(t.matches('[data-task]')){
+    if(!store.notify)store.notify={on:false,pomo:true,task:true};
+    store.notify.task=t.checked;save();renderSettings();
+  }else if(t.matches('[data-remind-time]')){
+    if(!store.remind)store.remind={on:false,time:'20:00'};
+    store.remind.time=t.value||'20:00';save();
+    renderSettings();
+  }else if(t.matches('[data-remind]')){
+    if(!store.remind)store.remind={on:false,time:'20:00'};
+    store.remind.on=t.checked;save();
+    if(t.checked&&store.notify&&store.notify.on)checkReminder();
+    renderSettings();
   }
 });
 
@@ -1794,7 +1920,11 @@ updateModeUI();
 if(!store.chosen){
   document.getElementById('modeGate').hidden=false;
 }else{
-  showView(VIEWS.includes(store.lastView)?store.lastView:'home');
+  /* 刷新(F5/下拉刷新不重载页面)保持当前页；清除后台重新进入时回首页 */
+  let navType='navigate';
+  try{const p=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(p)navType=p.type;}catch(e){}
+  const keep=navType==='reload';
+  showView((keep&&VIEWS.includes(store.lastView))?store.lastView:'home');
 }
 /* 启动动画：播放完毕后淡出进入页面 */
 const splash=document.getElementById('splash');
@@ -1804,6 +1934,9 @@ if(splash){
     setTimeout(()=>{if(splash.parentNode)splash.parentNode.removeChild(splash);},520);
   },1750);
 }
+/* 系统通知：打开时检查一次，页面打开期间每 30 秒检查（打卡 / 任务到点） */
+setTimeout(()=>{checkReminder();checkTaskReminders();},3000);
+setInterval(()=>{checkReminder();checkTaskReminders();},30000);
 </script>
 </body>
 </html>
