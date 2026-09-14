@@ -295,7 +295,7 @@ svg{display:block}
 .empty svg{width:40px;height:40px;margin:0 auto 10px;color:var(--stroke)}
 
 /* ============ 底部导航 ============ */
-#tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(470px,100vw);background:var(--tabbar);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:5px 4px calc(7px + env(safe-area-inset-bottom));z-index:50}
+#tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(470px,100vw);background:var(--tabbar);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);padding:5px 4px calc(7px + env(safe-area-inset-bottom));z-index:50}
 .navbtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--ink3);font-size:10.5px;position:relative;transition:color .15s}
 .navbtn svg{width:21px;height:21px;transition:color .15s}
 .navbtn.on{color:var(--ink);font-weight:600}
@@ -423,7 +423,7 @@ html,body{overscroll-behavior-y:contain}
 }
 @media (min-width:1024px){
   #app{padding-left:96px}
-  #tabbar{left:0;top:0;bottom:0;width:96px;height:100vh;border-top:none;border-right:1px solid var(--line);grid-template-columns:none;grid-template-rows:auto repeat(5,min-content);display:grid;place-items:center;align-content:start;padding:22px 0 18px}
+  #tabbar{left:0;top:0;bottom:0;width:96px;height:100vh;border-top:none;border-right:1px solid var(--line);grid-template-columns:none;grid-template-rows:auto repeat(6,min-content);display:grid;place-items:center;align-content:start;padding:22px 0 18px}
   .side-brand{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:18px}
   .side-brand span{width:46px;height:46px;border-radius:14px;background:var(--seal);color:#fff;font-family:var(--serif);font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px color-mix(in srgb,var(--seal) 35%,transparent)}
   .side-brand em{font-style:normal;font-size:10.5px;color:var(--ink2);letter-spacing:1px}
@@ -434,9 +434,33 @@ html,body{overscroll-behavior-y:contain}
   #noteList{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
   .timer-grid{grid-template-columns:.85fr 1.15fr}
 }
+/* ===== 启动动画 ===== */
+#splash{position:fixed;inset:0;z-index:500;background:#FFFFFF;display:flex;align-items:center;justify-content:center;transition:opacity .5s ease}
+#splash.done{opacity:0;pointer-events:none}
+.sp-inner{display:flex;flex-direction:column;align-items:center;text-align:center}
+.sp-badge{width:92px;height:92px;border-radius:26px;background:linear-gradient(145deg,#D0483A,#B02E20);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:44px;font-weight:900;box-shadow:0 16px 40px rgba(176,46,32,.28);position:relative;animation:spBadge .7s cubic-bezier(.18,.9,.28,1.15) both}
+.sp-badge .sp-climber{position:absolute;left:22%;width:9px;height:13px;border-radius:5px 5px 3px 3px;background:#fff;opacity:0;animation:spClimb 1.4s ease-in-out .45s both}
+.sp-climber::before{content:'';position:absolute;top:-4px;left:1.5px;width:6px;height:6px;border-radius:50%;background:#fff}
+.sp-title{font-family:var(--serif);font-size:26px;font-weight:900;color:#23272B;margin-top:18px;letter-spacing:6px;animation:spUp .6s ease .15s both}
+.sp-sub{font-size:12.5px;color:#9AA1A9;margin-top:6px;letter-spacing:2px;animation:spUp .6s ease .3s both}
+.sp-bar{width:150px;height:3px;border-radius:3px;background:#F0F1F3;margin-top:26px;overflow:hidden;animation:spUp .6s ease .4s both}
+.sp-bar i{display:block;height:100%;width:0;background:#C0392B;border-radius:3px;animation:spBar 1.35s cubic-bezier(.4,0,.2,1) .35s both}
+@keyframes spBadge{0%{transform:scale(.55) translateY(14px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+@keyframes spClimb{0%{top:76%;opacity:0}12%{opacity:1}85%{top:8%;opacity:1}100%{top:8%;opacity:0}}
+@keyframes spUp{0%{transform:translateY(10px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes spBar{0%{width:0}100%{width:100%}}
 </style>
 </head>
 <body>
+<!-- 启动动画 -->
+<div id="splash" aria-hidden="true">
+  <div class="sp-inner">
+    <div class="sp-badge">岸<span class="sp-climber"></span></div>
+    <div class="sp-title">上岸</div>
+    <div class="sp-sub">考公 · 考研 · 备考助手</div>
+    <div class="sp-bar"><i></i></div>
+  </div>
+</div>
 <div id="app">
 
   <!-- 下拉刷新指示器 -->
@@ -457,7 +481,6 @@ html,body{overscroll-behavior-y:contain}
           <button data-mode="gongkao">考公</button>
           <button data-mode="kaoyan">考研</button>
         </div>
-        <button class="iconbtn" data-act="settings" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="17" r="2"/></svg></button>
       </div>
     </header>
 
@@ -634,6 +657,42 @@ html,body{overscroll-behavior-y:contain}
     <div id="noteList"></div>
   </section>
 
+  <!-- ===== 视图：设置 ===== -->
+  <section class="view" id="view-settings" data-view="settings">
+    <header class="ph">
+      <div>
+        <h1>设置</h1>
+        <div class="sub">数据保存在本地浏览器中</div>
+      </div>
+    </header>
+    <div class="card">
+      <div class="fld">
+        <div class="theme-top"><label>外观主题</label>
+          <label class="switch-row"><span class="switch-label">自动暗夜</span><span class="switch"><input type="checkbox" data-ad id="autoDarkChk"><i></i></span></label>
+        </div>
+        <div id="themePicks"></div>
+        <div class="auto-times" id="autoTimes">
+          <label><span>自动开启</span><input type="time" data-ad-time="on" id="adOnT"></label>
+          <label><span>自动退出</span><input type="time" data-ad-time="off" id="adOffT"></label>
+        </div>
+        <p class="theme-note" id="themeNote"></p>
+      </div>
+      <div class="fld">
+        <label>数据管理</label>
+        <p style="font-size:13px;color:var(--ink2);margin:0">所有数据均保存在本机浏览器，考公与考研两个模式的数据独立保存。完成一个阶段后：先导出总结留档 → 再导出备份 → 最后重置重新开始；换设备时用「导入数据」选择备份文件即可恢复。</p>
+        <div class="data-tip">※ 导出总结仅生成可读文本文档，用于查看和存档，<b>不能作为导入数据使用</b>；只有「导出备份」生成的 .json 文件（含考公+考研全部数据）可用于导入。重置数据只清空<b>当前模式</b>，不会影响另一模式。</div>
+        <div class="data-actions">
+          <button class="btn-sec" data-act="export-summary">导出总结</button>
+          <button class="btn-sec" data-act="export-data">导出备份</button>
+          <button class="btn-sec" data-act="import-data">导入数据</button>
+          <button class="btn-sec danger" data-act="reset-data">重置当前模式</button>
+          <button class="btn-sec danger" data-act="reset-all">清空全部</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== 底部导航 ===== -->
   <nav id="tabbar" aria-label="主导航">
     <div class="side-brand"><span id="sideBrandChar">考</span><em id="sideBrandText">公考备战</em></div>
@@ -642,6 +701,7 @@ html,body{overscroll-behavior-y:contain}
     <button class="navbtn" data-nav="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9.5V13l2.5 2"/><path d="M9 3h6"/></svg>计时<span class="pulse" id="navPulse" hidden></span></button>
     <button class="navbtn" data-nav="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 4.8 7.5 4 4 4v14c3.5 0 6 .8 8 2.5 2-1.7 4.5-2.5 8-2.5V4c-3.5 0-6 .8-8 2.5Z"/><path d="M12 6.5V20"/></svg>复盘</button>
     <button class="navbtn" data-nav="notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>笔记</button>
+    <button class="navbtn" data-nav="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="17" r="2"/></svg>设置</button>
   </nav>
 </div>
 
@@ -871,7 +931,7 @@ function closeModal(){$('#overlay').hidden=true;document.body.style.overflow='';
 
 /* ==================== 视图切换 ==================== */
 let curView='home';
-const VIEWS=['home','tasks','timer','review','notes'];
+const VIEWS=['home','tasks','timer','review','notes','settings'];
 function showView(name){
   curView=name;
   store.lastView=name;save();
@@ -883,6 +943,7 @@ function showView(name){
   if(name==='timer'){renderTimerUI();renderStats();renderCharts(statSeg);}
   if(name==='review')renderReview();
   if(name==='notes')renderNotes();
+  if(name==='settings')renderSettings();
 }
 
 /* ==================== 考公 / 考研 模式切换 ==================== */
@@ -1435,27 +1496,15 @@ function updateTitle(){
 }
 
 /* ==================== 设置（重置数据） ==================== */
-function openSettings(){
+function renderSettings(){
   const ad=store.autoDark||{on:false,onT:'22:00',offT:'06:00'};
   const darkNow=autoDarkActive();
-  const hint=ad.on?(darkNow?('当前 '+ad.onT+' — '+ad.offT+' 时段，已自动启用暗夜主题'):('将在 '+ad.onT+' 自动切换暗夜主题，'+ad.offT+' 自动退出')):'主题仅改变外观配色，不会影响任务、笔记等任何数据。';
-  openModal(
-    '<div class="fs-head"><div><h3>设置</h3><div class="m-sub">数据保存在本地浏览器中</div></div>'+
-    '<button class="m-close" data-act="close-modal" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
-    '<div class="fs-body">'+
-    '<div class="fld"><div class="theme-top"><label>外观主题</label>'+
-    '<label class="switch-row"><span class="switch-label">自动暗夜</span><span class="switch"><input type="checkbox" data-ad'+(ad.on?' checked':'')+'><i></i></span></label></div>'+
-    themePickerHtml()+
-    '<div class="auto-times"'+(ad.on?'':' hidden')+'>'+
-    '<label><span>自动开启</span><input type="time" data-ad-time="on" value="'+(ad.onT||'22:00')+'"></label>'+
-    '<label><span>自动退出</span><input type="time" data-ad-time="off" value="'+(ad.offT||'06:00')+'"></label></div>'+
-    '<p class="theme-note">'+hint+'</p></div>'+
-    '<div class="fld"><label>数据管理</label><p style="font-size:13px;color:var(--ink2);margin:0">所有数据均保存在本机浏览器，考公与考研两个模式的数据独立保存。完成一个阶段后：先导出总结留档 → 再导出备份 → 最后重置重新开始；换设备时用「导入数据」选择备份文件即可恢复。</p>'+
-    '<div class="data-tip">※ 导出总结仅生成可读文本文档，用于查看和存档，<b>不能作为导入数据使用</b>；只有「导出备份」生成的 .json 文件（含考公+考研全部数据）可用于导入。重置数据只清空<b>当前模式</b>，不会影响另一模式。</div>'+
-    '<div class="data-actions"><button class="btn-sec" data-act="export-summary">导出总结</button><button class="btn-sec" data-act="export-data">导出备份</button><button class="btn-sec" data-act="import-data">导入数据</button><button class="btn-sec danger" data-act="reset-data">重置当前模式</button><button class="btn-sec danger" data-act="reset-all">清空全部</button><input type="file" id="importFile" accept=".json,application/json" hidden></div></div>'+
-    '</div>'+
-    '<div class="fs-foot"><button class="btn-main" data-act="close-modal">知道了</button></div>');
-  $('#modalBox').classList.add('full');
+  const chk=$('#autoDarkChk');if(chk)chk.checked=!!ad.on;
+  const at=$('#autoTimes');if(at)at.hidden=!ad.on;
+  const onT=$('#adOnT');if(onT)onT.value=ad.onT||'22:00';
+  const offT=$('#adOffT');if(offT)offT.value=ad.offT||'06:00';
+  const note=$('#themeNote');if(note)note.textContent=ad.on?(darkNow?('当前 '+ad.onT+' — '+ad.offT+' 时段，已自动启用暗夜主题'):('将在 '+ad.onT+' 自动切换暗夜主题，'+ad.offT+' 自动退出')):'主题仅改变外观配色，不会影响任务、笔记等任何数据。';
+  const pk=$('#themePicks');if(pk)pk.innerHTML=themePickerHtml();
 }
 function resetData(){
   const nm=store.mode==='kaoyan'?'考研':'考公';
@@ -1651,8 +1700,7 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');
   if(el){
     const act=el.dataset.act;
-    if(act==='settings')openSettings();
-    else if(act==='reset-data'){if(confirm('确定要重置所有数据吗？将回到初始状态，当前任务、学习记录、复盘、笔记全部清空。'))resetData();}
+    if(act==='reset-data'){if(confirm('确定要重置所有数据吗？将回到初始状态，当前任务、学习记录、复盘、笔记全部清空。'))resetData();}
     else if(act==='reset-all')resetAllData();
     else if(act==='export-data')exportData();
     else if(act==='export-summary')exportSummary();
@@ -1698,7 +1746,7 @@ document.addEventListener('click',e=>{
   const sc=e.target.closest('[data-scope]');
   if(sc){taskScope=sc.dataset.scope;document.querySelectorAll('[data-scope]').forEach(b=>b.classList.toggle('on',b===sc));renderTasks();return;}
   const thm=e.target.closest('[data-theme]');
-  if(thm){applyTheme(thm.dataset.theme,true);openSettings();return;}
+  if(thm){applyTheme(thm.dataset.theme,true);renderSettings();return;}
   const tm=e.target.closest('[data-tmode]');
   if(tm){setMode(tm.dataset.tmode);document.querySelectorAll('[data-tmode]').forEach(b=>b.classList.toggle('on',b===tm));return;}
   const seg=e.target.closest('[data-seg]');
@@ -1728,12 +1776,12 @@ document.addEventListener('change',e=>{
     if(!store.autoDark)store.autoDark={on:false,onT:'22:00',offT:'06:00'};
     store.autoDark.on=t.checked;save();
     if(t.checked)refreshAutoDark();else applyTheme(store.theme||'white',false);
-    openSettings();
+    renderSettings();
   }else if(t.matches('[data-ad-time]')){
     if(!store.autoDark)store.autoDark={on:false,onT:'22:00',offT:'06:00'};
     store.autoDark[t.dataset.adTime==='on'?'onT':'offT']=t.value;save();
     refreshAutoDark();
-    openSettings();
+    renderSettings();
   }
 });
 
@@ -1747,6 +1795,14 @@ if(!store.chosen){
   document.getElementById('modeGate').hidden=false;
 }else{
   showView(VIEWS.includes(store.lastView)?store.lastView:'home');
+}
+/* 启动动画：播放完毕后淡出进入页面 */
+const splash=document.getElementById('splash');
+if(splash){
+  setTimeout(()=>{
+    splash.classList.add('done');
+    setTimeout(()=>{if(splash.parentNode)splash.parentNode.removeChild(splash);},520);
+  },1750);
 }
 </script>
 </body>
