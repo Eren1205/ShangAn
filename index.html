@@ -348,6 +348,29 @@ svg{display:block}
 .font-pick.on{border-color:var(--seal);color:var(--seal);font-weight:700;background:var(--seal-soft)}
 #view-settings .card>.fld{border-bottom:1px solid var(--line);padding-bottom:15px;margin-bottom:15px}
 #view-settings .card>.fld:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
+/* 任务：题量/正确率/用时/题本 */
+.t-stats{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink2);margin-top:5px}
+.t-stats span{display:inline-flex;align-items:center;gap:3px}
+.t-stats b{color:var(--ink);font-weight:600}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+/* 艾宾浩斯复习 */
+.eb-head{display:flex;justify-content:space-between;align-items:center}
+.eb-head .btn-sec{width:auto;margin-top:0;padding:9px 14px;font-size:13px;border-radius:11px;flex:none}
+.eb-sec{margin-top:16px}
+.eb-sec h4{font-size:13px;margin:0 0 9px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:6px}
+.eb-item{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px dashed var(--line)}
+.eb-item:last-child{border-bottom:none}
+.eb-main{flex:1;min-width:0}
+.eb-t{font-size:14px;font-weight:600;color:var(--ink);word-break:break-all}
+.eb-s{font-size:12px;color:var(--ink2);margin-top:2px}
+.eb-item.due .eb-t{color:var(--seal)}
+.eb-item.done{opacity:.75}
+.eb-item.done .eb-t{text-decoration:line-through;color:var(--ink3)}
+.eb-tag{font-size:11px;padding:2px 8px;border-radius:7px;background:var(--seal-soft);color:var(--seal);font-weight:600;flex-shrink:0}
+.eb-tag.over{background:rgba(178,58,46,.13);color:var(--err)}
+.eb-btn{flex-shrink:0;border:1px solid var(--seal);color:var(--seal);background:none;border-radius:10px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-weight:600}
+.eb-btn:active{background:var(--seal-soft)}
+.eb-del{flex-shrink:0;border:none;background:none;color:var(--ink3);padding:6px;cursor:pointer}
 .chk-row{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;user-select:none}
 .chk-row input{width:18px;height:18px;accent-color:var(--seal)}
 .toolbar{display:flex;gap:8px;margin-bottom:8px}
@@ -620,6 +643,7 @@ html,body{overscroll-behavior-y:contain}
     <div class="review-tabs">
       <button type="button" data-review-tab="form" class="on">复盘模板</button>
       <button type="button" data-review-tab="history">复盘记录</button>
+      <button type="button" data-review-tab="eb">艾宾浩斯复习</button>
     </div>
     <div class="card" id="reviewFormCard">
       <p class="card-title"><span class="t-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>今日复盘模板</p>
@@ -648,6 +672,14 @@ html,body{overscroll-behavior-y:contain}
     <div class="card" id="reviewHistoryCard">
       <p class="card-title"><span class="t-ico" style="color:var(--seal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 1 2.3 5.7"/><path d="M4 12V7M4 12h5"/></svg></span>复盘记录</p>
       <div id="reviewHistory"></div>
+    </div>
+    <div class="card" id="reviewEbCard">
+      <div class="eb-head">
+        <p class="card-title" style="margin:0"><span class="t-ico" style="color:var(--seal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 3a9 9 0 1 0 9 9"/><path d="M12 7.5V12l3 2"/></svg></span>艾宾浩斯复习</p>
+        <button class="btn-sec" data-act="add-eb">+ 添加学习内容</button>
+      </div>
+      <p class="theme-note">按艾宾浩斯遗忘曲线安排复习：学习后第 <b>1、2、4、7、15、30</b> 天各复习一轮，对抗遗忘、形成长期记忆。</p>
+      <div id="ebBody"></div>
     </div>
   </section>
 
@@ -978,7 +1010,7 @@ const TIPS={
 
 /* ==================== 种子数据（空初始状态 · 双模式） ==================== */
 function seedMode(){
-  return {exam:{name:'',date:'',start:''},checkins:[],tasks:[],records:[],notes:[],reviews:[]};
+  return {exam:{name:'',date:'',start:''},checkins:[],tasks:[],records:[],notes:[],reviews:[],eb:{list:[]}};
 }
 function seedStore(){
   return {mode:'gongkao',chosen:null,theme:'white',font:'default',autoDark:{on:false,onT:'22:00',offT:'06:00'},notify:{on:false,pomo:true,task:true},remind:{on:false,time:'20:00'},remindSent:'',taskSent:{},quoteIdx:null,homeCard:'quote',tipIdx:0,lastView:null,gongkao:seedMode(),kaoyan:seedMode()};
@@ -988,6 +1020,7 @@ function normalizeModeData(d){
   if(!d.exam||typeof d.exam!=='object')d.exam={name:'',date:'',start:''};
   if(d.exam.name==='2027 国家公务员考试'&&d.exam.date==='2026-11-29'&&d.exam.start==='2026-03-01')d.exam={name:'',date:'',start:''};
   ['checkins','tasks','records','notes','reviews'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[];});
+  if(!d.eb||typeof d.eb!=='object'||!Array.isArray(d.eb.list))d.eb={list:[]};
   return d;
 }
 let store=(()=>{
@@ -1302,19 +1335,21 @@ function renderHomeStats(){
   const tMin=sumDay(todayStr());
   const ts=todayTasks();
   const done=ts.filter(x=>taskDoneOn(x,todayStr())).length;
+  const ebC=ebDayCount();
   $('#homeStats').innerHTML=
     '<div class="s3"><div class="n">'+Math.floor(tMin/60)+'<small>h</small>'+(tMin%60?'<small>'+String(tMin%60).padStart(2,'0')+'m</small>':'')+'</div><div class="l">今日专注</div></div>'+
-    '<div class="s3"><div class="n">'+done+'<small> / '+ts.length+'</small></div><div class="l">任务完成</div></div>'+
+    '<div class="s3"><div class="n">'+(done+ebC.done)+'<small> / '+(ts.length+ebC.due)+'</small></div><div class="l">任务完成</div></div>'+
     '<div class="s3"><div class="n" style="color:var(--seal)">'+streak()+'<small>天</small></div><div class="l">连续打卡</div></div>';
 }
 function renderMiniTodo(){
   const all=todayTasks();
+  const ebT=ebTodayList();
   const ts=all.slice(0,4);
-  $('#miniTodoMore').textContent=all.length+' 项';
-  $('#miniTodo').innerHTML=ts.length?ts.map(x=>{
+  $('#miniTodoMore').textContent=(all.length+ebT.length)+' 项';
+  $('#miniTodo').innerHTML=(ts.length||ebT.length)?ts.map(x=>{
     const m=MODMAP[x.cat]||{name:'任务',color:'#8A8F83'};
     return '<div class="mini-todo '+(x.done?'done':'')+'"><span class="dot" style="background:'+m.color+'"></span><span class="t">'+escapeHtml(x.title)+'</span><span class="p">'+m.name+(x.repeat==='week'?' · '+wdShort(x.weekdays):'')+'</span></div>';
-  }).join(''):'<div class="empty" style="padding:22px">今天还没有任务，去添加第一条吧</div>';
+  }).join('')+ebT.slice(0,4).map(ebMiniRow).join(''):'<div class="empty" style="padding:22px">今天还没有任务，去添加第一条吧</div>';
 }
 let calY=null,calM=null; // null = 当前月
 function renderCheckin(){
@@ -1371,17 +1406,19 @@ function renderTasks(){
   if(taskScope==='all'){renderAllTasks();return;}
   $('#taskDate').textContent=dateCN();
   const ts=todayTasks();
+  const ebT=ebTodayList();
   const done=ts.filter(x=>taskDoneOn(x,todayStr())).length;
-  const pct=ts.length?Math.round(done/ts.length*100):0;
+  const pct=(ts.length+ebT.length)?Math.round((done+ebT.length)/(ts.length+ebT.length)*100):0;
   $('#taskBar').style.width=pct+'%';
-  $('#taskProgTxt').textContent=ts.length?('已完成 '+done+' / '+ts.length):'今日暂无任务';
+  $('#taskProgTxt').textContent=(ts.length+ebT.length)?('已完成 '+done+' / '+(ts.length+ebT.length)+(ebT.length?'（含 '+ebT.length+' 项复习）':'')):'今日暂无任务';
   const flt=taskFilter==='全部'?null:taskFilter;
   const groups=MODULES.map(m=>({m,list:ts.filter(x=>x.cat===m.key&&(!flt||m.grp===flt))})).filter(g=>g.list.length);
-  $('#taskGroups').innerHTML=groups.length?groups.map(g=>{
+  const ebHtml=ebT.length?'<div class="grp"><div class="grp-head"><span class="dot" style="background:var(--seal)"></span>艾宾浩斯复习<span class="cnt">'+ebT.length+'</span></div>'+ebT.map(ebTaskRow).join('')+'</div>':'';
+  $('#taskGroups').innerHTML=(groups.length||ebT.length)?groups.map(g=>{
     const gd=g.list.filter(x=>taskDoneOn(x,todayStr())).length;
     return '<div class="grp"><div class="grp-head"><span class="dot" style="background:'+g.m.color+'"></span>'+g.m.grp+' · '+g.m.name+'<span class="cnt">'+gd+' / '+g.list.length+'</span></div>'+
       g.list.map(x=>taskRow(x)).join('')+'</div>';
-  }).join(''):'<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>'+(taskFilter==='全部'?'今天还没有任务，点右下角添加':'该分类下暂无任务')+'</div>';
+  }).join('')+ebHtml:'<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>'+(taskFilter==='全部'?'今天还没有任务，点右下角添加':'该分类下暂无任务')+'</div>';
 }
 function renderAllTasks(){
   const flt=taskFilter==='全部'?null:taskFilter;
@@ -1409,6 +1446,12 @@ function taskRow(x){
     '<div class="t-meta"><span class="tagmod">'+m.name+'</span>'+
     '<span class="pri" style="color:'+PRI_COLOR[x.prio]+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4c4-2 8 2 12 0v8c-4 2-8-2-12 0"/></svg>'+x.prio+'优先级</span>'+
     (x.remind?'<span>提醒 '+escapeHtml(x.remind)+'</span>':'')+'</div>'+
+    (x.book||x.qty||x.acc||x.dur?'<div class="t-stats">'+
+      (x.book?'<span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 4.5Z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>'+escapeHtml(x.book)+'</span>':'')+
+      (x.qty?'<span>题量 <b>'+x.qty+'</b></span>':'')+
+      (x.acc?'<span>正确率 <b>'+x.acc+'%</b></span>':'')+
+      (x.dur?'<span>用时 <b>'+x.dur+'分钟</b></span>':'')+
+    '</div>':'')+
     (x.note?'<div class="t-note">'+escapeHtml(x.note)+'</div>':'')+'</div>'+
     '<div class="t-actions"><button data-act="edit-task" data-id="'+x.id+'" aria-label="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1Z"/></svg></button>'+
     '<button class="bell '+(x.remind?'on':'')+'" data-act="remind-task" data-id="'+x.id+'" aria-label="打卡提醒"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></button>'+
@@ -1439,6 +1482,12 @@ function openTaskModal(id){
     '<div class="chips" id="wdChips"'+(modalState.repeat==='week'?'':' hidden')+' style="justify-content:flex-start;margin-top:9px">'+wdChips+'</div>'+
     '<div class="hint" style="font-size:11px;color:var(--ink3);margin-top:6px">'+(modalState.repeat==='week'?'勾选星期几，任务将在每周这些天自动出现，当天完成状态互不影响':'')+'</div></div>'+
     '<div class="fld"><label>打卡提醒（可选）</label><input type="text" id="tmRemind" value="'+(t?escapeHtml(t.remind||''):'')+'" placeholder="如：08:30" maxlength="10"></div>'+
+    '<div class="fld form-grid2"><label>题量（可选）</label><label>正确率（可选）</label>'+
+    '<input type="number" id="tmQty" min="0" value="'+(t&&t.qty?t.qty:'')+'" placeholder="如 40" style="width:100%">'+
+    '<input type="number" id="tmAcc" min="0" max="100" value="'+(t&&t.acc?t.acc:'')+'" placeholder="如 85" style="width:100%">'+
+    '<label>用时（分钟·可选）</label><label>题本（可选）</label>'+
+    '<input type="number" id="tmDur" min="0" value="'+(t&&t.dur?t.dur:'')+'" placeholder="如 45" style="width:100%">'+
+    '<input type="text" id="tmBook" value="'+(t?escapeHtml(t.book||''):'')+'" placeholder="如 粉笔行测5000题" maxlength="30" style="width:100%"></div>'+
     '<div class="fld"><label>备注（可选）</label><input type="text" id="tmNote" value="'+(t?escapeHtml(t.note||''):'')+'" placeholder="补充说明" maxlength="60"></div>'+
     '<div class="m-actions"><button class="btn-sec" data-act="close-modal">取消</button><button class="btn-main" data-act="save-task">'+(t?'保存修改':'添加任务')+'</button></div>');
   $('#tmPrio').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
@@ -1450,7 +1499,10 @@ function saveTask(){
   const title=$('#tmTitle').value.trim();
   if(!title){toast('请填写任务名称');return;}
   if(modalState.repeat==='week'&&!modalState.weekdays.length){toast('请至少勾选一个重复日');return;}
-  const data={title,cat:modalState.cat,prio:modalState.prio,note:$('#tmNote').value.trim(),remind:$('#tmRemind').value.trim(),repeat:modalState.repeat,weekdays:modalState.repeat==='week'?modalState.weekdays.slice():[]};
+  const qty=Math.max(0,parseInt($('#tmQty').value)||0);
+  const acc=Math.min(100,Math.max(0,parseInt($('#tmAcc').value)||0));
+  const dur=Math.max(0,parseInt($('#tmDur').value)||0);
+  const data={title,cat:modalState.cat,prio:modalState.prio,note:$('#tmNote').value.trim(),remind:$('#tmRemind').value.trim(),repeat:modalState.repeat,weekdays:modalState.repeat==='week'?modalState.weekdays.slice():[],qty:qty||null,acc:acc||null,dur:dur||null,book:$('#tmBook').value.trim()};
   if(modalState.editId){
     const t=app.tasks.find(x=>x.id===modalState.editId);
     if(t){
@@ -1590,23 +1642,27 @@ function renderCharts(seg){
 }
 
 /* ==================== 复盘 ==================== */
+const EB_INTERVALS=[1,2,4,7,15,30];
 let reviewRating=3,reviewTab='form';
 function renderReview(){
   document.querySelectorAll('[data-review-tab]').forEach(b=>b.classList.toggle('on',b.dataset.reviewTab===reviewTab));
   const hst=$('#reviewHistoryCard');
   const f0=$('#reviewFormCard');
+  const eb=$('#reviewEbCard');
   if(f0)f0.hidden=reviewTab!=='form';
   if(hst)hst.hidden=reviewTab!=='history';
+  if(eb)eb.hidden=reviewTab!=='eb';
   const rv=app.reviews.find(x=>x.date===todayStr());
   const tMin=sumDay(todayStr());
   const ts=todayTasks();
   const done=ts.filter(x=>taskDoneOn(x,todayStr())).length;
+  const ebC=ebDayCount();
   const checked=app.checkins.includes(todayStr());
   $('#reviewSummary').innerHTML=
     '<p class="card-title"><span class="t-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15V9M12 15V6M16 15v-4"/></svg></span>今日概况'+(rv?'<span class="t-sub">今日已复盘</span>':'')+'</p>'+
     '<div class="stats3" style="margin-bottom:0">'+
     '<div class="s3"><div class="n">'+fmtShort(tMin)+'</div><div class="l">专注时长</div></div>'+
-    '<div class="s3"><div class="n">'+done+'<small> / '+ts.length+'</small></div><div class="l">完成任务</div></div>'+
+    '<div class="s3"><div class="n">'+(done+ebC.done)+'<small> / '+(ts.length+ebC.due)+'</small></div><div class="l">完成任务</div></div>'+
     '<div class="s3"><div class="n" style="color:'+(checked?'var(--seal)':'var(--ink3)')+'">'+(checked?'已打卡':'未打卡')+'</div><div class="l">今日打卡</div></div></div>';
   const frm=$('#reviewFormCard');
   if(rv){
@@ -1624,6 +1680,114 @@ function renderReview(){
     const st='★★★★★'.slice(0,r.rating);
     return '<div class="rev-item"><div class="d">'+(r.date.slice(5).replace('-','/'))+'</div><div class="snip">'+st+' · '+escapeHtml((r.gain||'').slice(0,34))+'</div><span class="stamp-mini">已复盘</span></div>';
   }).join(''):'<div class="empty">还没有复盘记录，今天开始第一篇吧</div>';
+  renderEb();
+}
+/* —— 艾宾浩斯复习：今日到期项同步到任务 —— */
+function ebTodayList(){
+  const t=todayStr(),out=[];
+  (app.eb.list||[]).forEach(it=>{
+    (it.rounds||[]).forEach(r=>{if(!r.done&&r.due===t)out.push({it,round:r});});
+  });
+  return out;
+}
+function ebDayCount(){
+  const t=todayStr();
+  let due=0,done=0;
+  (app.eb.list||[]).forEach(it=>(it.rounds||[]).forEach(r=>{if(r.due===t){due++;if(r.done)done++;}}));
+  return {due,done};
+}
+function ebTaskRow(e){
+  return '<div class="trow"><button class="tcheck" data-act="eb-done" data-id="'+e.it.id+'" data-round="'+e.round.n+'" aria-label="完成"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>'+
+    '<div class="t-main"><div class="t-title">'+escapeHtml(e.it.text)+'</div>'+
+    '<div class="t-when week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 3a9 9 0 1 0 9 9"/><path d="M12 7.5V12l3 2"/></svg>艾宾浩斯 · 第 '+e.round.n+' 轮复习 · 今日到期</div></div></div>';
+}
+function ebMiniRow(e){
+  return '<div class="mini-todo"><span class="dot" style="background:var(--seal)"></span><span class="t">'+escapeHtml(e.it.text)+'</span><span class="p">艾宾浩斯·第'+e.round.n+'轮</span></div>';
+}
+/* —— 艾宾浩斯复习 —— */
+function addDaysStr(dateStr,days){
+  const d=parseD(dateStr);
+  d.setDate(d.getDate()+days);
+  return dstr(d);
+}
+function ebInitRounds(learnDate){
+  return EB_INTERVALS.map((n,i)=>({n:i+1,due:addDaysStr(learnDate,n),done:false,doneAt:''}));
+}
+function renderEb(){
+  const box=$('#ebBody');
+  if(!box)return;
+  const list=app.eb.list.slice().sort((a,b)=>a.learnDate<b.learnDate?-1:1);
+  if(!list.length){
+    box.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 3a9 9 0 1 0 9 9"/><path d="M12 7.5V12l3 2"/></svg>还没有学习内容<br>添加后自动按遗忘曲线安排复习</div>';
+    return;
+  }
+  const t=todayStr();
+  const dueList=[],soonList=[],allDone=[];
+  list.forEach(it=>{
+    const rounds=it.rounds.filter(r=>!r.done);
+    if(rounds.length){
+      const next=rounds[0];
+      if(next.due<=t)dueList.push({it,next});
+      else soonList.push({it,next});
+    }else allDone.push(it);
+  });
+  dueList.sort((a,b)=>a.next.due<b.next.due?-1:1);
+  soonList.sort((a,b)=>a.next.due<b.next.due?-1:1);
+  const item=(o,isDue)=>{
+    const it=o.it;const r=o.next;
+    const dayDiff=Math.round((parseD(r.due)-parseD(t))/86400000);
+    const tag=isDue?(dayDiff<0?'逾期 '+( -dayDiff)+' 天':'第 '+r.n+' 轮 · 今日到期'):'第 '+r.n+' 轮 · '+(dayDiff===0?'今天':(dayDiff+' 天后'));
+    return '<div class="eb-item'+(isDue?' due':'')+'">'+
+      '<span class="eb-tag'+(isDue&&dayDiff<0?' over':'')+'">'+tag+'</span>'+
+      '<div class="eb-main"><div class="eb-t">'+escapeHtml(it.text)+'</div>'+
+      '<div class="eb-s">学习于 '+it.learnDate.slice(5).replace('-','/')+' · 共 '+it.rounds.length+' 轮 · '+(it.rounds.filter(x=>x.done).length)+'/'+it.rounds.length+' 已完成</div></div>'+
+      (isDue?'<button class="eb-btn" data-act="eb-done" data-id="'+it.id+'" data-round="'+r.n+'">复习完成</button>':'')+
+      '<button class="eb-del" data-act="eb-del" data-id="'+it.id+'" aria-label="删除"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></button></div>';
+  };
+  let html='';
+  if(dueList.length){
+    html+='<div class="eb-sec"><h4><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今天需要复习 '+dueList.length+' 项</h4>'+dueList.map(x=>item(x,true)).join('')+'</div>';
+  }else{
+    html+='<div class="eb-sec"><h4><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>今天没有到期的复习内容</h4><div class="theme-note" style="margin:0">已完成今天全部复习，明天继续～</div></div>';
+  }
+  if(soonList.length){
+    html+='<div class="eb-sec"><h4><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>即将复习 '+soonList.length+' 项</h4>'+soonList.slice(0,5).map(x=>item(x,false)).join('')+(soonList.length>5?'<div class="theme-note" style="margin:6px 0 0">还有 '+ (soonList.length-5)+' 项安排在未来</div>':'')+'</div>';
+  }
+  if(allDone.length){
+    html+='<div class="eb-sec"><h4><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15V9M12 15V6M16 15v-4"/></svg>已完整复习 '+allDone.length+' 项（全部轮次完成）</h4>'+allDone.slice(0,5).map(it=>{
+      return '<div class="eb-item done"><div class="eb-main"><div class="eb-t">'+escapeHtml(it.text)+'</div><div class="eb-s">'+it.rounds.length+' 轮全部完成 · '+it.learnDate.slice(5).replace('-','/')+' 开始</div></div><button class="eb-del" data-act="eb-del" data-id="'+it.id+'" aria-label="删除"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></button></div>';
+    }).join('')+(allDone.length>5?'<div class="theme-note" style="margin:6px 0 0">共 '+allDone.length+' 项已完成</div>':'')+'</div>';
+  }
+  box.innerHTML=html;
+}
+function openEbModal(){
+  openModal(
+    '<h3>添加学习内容</h3><div class="m-sub">从今天起按艾宾浩斯遗忘曲线自动安排 6 轮复习</div>'+
+    '<div class="fld"><label>学习内容 <span class="req">*</span></label><input type="text" id="ebText" placeholder="如：资料分析 · 比重公式" maxlength="40"></div>'+
+    '<div class="fld"><label>学习日期</label><input type="date" id="ebDate" value="'+todayStr()+'"></div>'+
+    '<div class="m-actions"><button class="btn-sec" data-act="close-modal">取消</button><button class="btn-main" data-act="save-eb">添加</button></div>');
+}
+function saveEb(){
+  const text=$('#ebText').value.trim();
+  if(!text){toast('请填写学习内容');return;}
+  let ld=$('#ebDate').value;
+  if(!ld)ld=todayStr();
+  if(ld>todayStr()){toast('学习日期不能晚于今天');return;}
+  const list=app.eb.list||(app.eb.list=[]);
+  list.push({id:genId(),text,learnDate:ld,rounds:ebInitRounds(ld)});
+  save();closeModal();renderReview();toast('已添加，首轮复习：'+EB_INTERVALS[0]+' 天后');
+}
+function ebDone(id,roundN){
+  const it=(app.eb.list||[]).find(x=>x.id===id);
+  if(!it)return;
+  const r=it.rounds.find(x=>x.n===roundN);
+  if(r){r.done=true;r.doneAt=todayStr();}
+  save();renderReview();renderTasks();renderMiniTodo();renderHomeStats();toast('第 '+roundN+' 轮复习完成，继续保持');
+}
+function ebDel(id){
+  if(!confirm('删除这条学习内容及其全部复习计划？'))return;
+  app.eb.list=app.eb.list.filter(x=>x.id!==id);
+  save();renderReview();toast('已删除');
 }
 function saveReview(){
   const tts=todayTasks();
@@ -1843,7 +2007,7 @@ function resetAllData(){
   location.reload();
 }
 function hasAnyData(){
-  return !!((app.tasks&&app.tasks.length)||(app.checkins&&app.checkins.length)||(app.records&&app.records.length)||(app.notes&&app.notes.length)||(app.reviews&&app.reviews.length));
+  return !!((app.tasks&&app.tasks.length)||(app.checkins&&app.checkins.length)||(app.records&&app.records.length)||(app.notes&&app.notes.length)||(app.reviews&&app.reviews.length)||(app.eb&&app.eb.list&&app.eb.list.length));
 }
 function exportData(){
   if(!hasAnyData()){toast('暂无可导出数据');return;}
@@ -1924,6 +2088,20 @@ function exportSummary(){
     const plain=(n.content||'').replace(/==/g,'').replace(/\s+/g,' ');
     L.push('　'+(plain.length>80?plain.slice(0,80)+'…':plain));
   });
+  L.push('');
+  const ebList=(app.eb&&app.eb.list)||[];
+  L.push('【艾宾浩斯复习】共 '+ebList.length+' 项学习内容');
+  if(ebList.length){
+    const t=todayStr();
+    const pend=ebList.filter(it=>(it.rounds||[]).some(r=>!r.done&&r.due<=t));
+    L.push('今日待复习：'+pend.length+' 项');
+    ebList.forEach(it=>{
+      const rounds=it.rounds||[];
+      const doneN=rounds.filter(r=>r.done).length;
+      const next=rounds.find(r=>!r.done);
+      L.push('▸ '+it.text+'（学习于 '+it.learnDate+' · 复习进度 '+doneN+'/'+rounds.length+(next?(' · 下次 '+(next.due<=t?'今天':next.due)):' · 全部完成')+'）');
+    });
+  }else{L.push('（暂无学习内容）');}
   L.push('');
   L.push('—— 数据导出于 上岸 · 备考助手 ——');
   try{
@@ -2046,6 +2224,10 @@ document.addEventListener('click',e=>{
     else if(act==='add-task')openTaskModal();
     else if(act==='save-task')saveTask();
     else if(act==='save-review')saveReview();
+    else if(act==='add-eb')openEbModal();
+    else if(act==='save-eb')saveEb();
+    else if(act==='eb-done')ebDone(+el.dataset.id,+el.dataset.round);
+    else if(act==='eb-del')ebDel(+el.dataset.id);
     else if(act==='add-note')openNoteModal();
     else if(act==='edit-note')openNoteModal(+el.dataset.id);
     else if(act==='del-note'){app.notes=app.notes.filter(x=>x.id!==+el.dataset.id);save();renderNotes();toast('笔记已删除');}
@@ -2106,7 +2288,7 @@ document.addEventListener('click',e=>{
     return;
   }
   const rt=e.target.closest('[data-review-tab]');
-  if(rt){reviewTab=rt.dataset.reviewTab==='history'?'history':'form';renderReview();return;}
+  if(rt){reviewTab=rt.dataset.reviewTab==='history'?'history':(rt.dataset.reviewTab==='eb'?'eb':'form');renderReview();return;}
 });
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
