@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#C0392B">
 <link rel="icon" type="image/jpeg" href="https://aka.doubaocdn.com/s/IQUUULozzV">
 <link rel="apple-touch-icon" href="https://aka.doubaocdn.com/s/IQUUULozzV">
@@ -43,7 +43,7 @@
   --overlay:rgba(15,23,42,.42);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
 input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink)}
@@ -346,6 +346,8 @@ svg{display:block}
 .font-row{display:flex;flex-wrap:wrap;gap:8px}
 .font-pick{padding:8px 15px;border-radius:10px;border:1px solid var(--line);font-size:13px;color:var(--ink2);transition:all .15s;background:var(--surface)}
 .font-pick.on{border-color:var(--seal);color:var(--seal);font-weight:700;background:var(--seal-soft)}
+#view-settings .card>.fld{border-bottom:1px solid var(--line);padding-bottom:15px;margin-bottom:15px}
+#view-settings .card>.fld:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
 .chk-row{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;user-select:none}
 .chk-row input{width:18px;height:18px;accent-color:var(--seal)}
 .toolbar{display:flex;gap:8px;margin-bottom:8px}
@@ -695,7 +697,7 @@ html,body{overscroll-behavior-y:contain}
       <div class="fld" style="margin-top:2px">
         <label>字体</label>
         <div class="font-row" id="fontPicks"></div>
-        <p class="theme-note" id="fontNote">可爱风等字体需设备本地已安装（幼圆/楷体/宋体为系统自带），未安装时自动回退默认字体。</p>
+        <p class="theme-note" id="fontNote">品牌字体（站酷快乐体/马善政楷书/思源宋体/黄油体）需联网加载一次，之后自动缓存；离线或加载失败时自动回退默认字体。</p>
       </div>
       <div class="fld">
         <label>系统通知</label>
@@ -1030,18 +1032,37 @@ const THEMES={
   dark:{name:'暗夜',desc:'深色护眼，适合夜间专注',paper:'#171A1F',surface:'#1E2229',line:'#2E343D',ink:'#E8EAED',ink2:'#A8B0BA',ink3:'#6E7682',seal:'#E05545',sealDeep:'#B84335',sealSoft:'rgba(224,85,69,.22)',hl:'rgba(255,205,90,.28)',bg:'#12151A',seg:'#262B33',seg2:'#2A3038',track:'#262B33',cday:'#1B1F26',stroke:'#3A414C',tabbar:'rgba(18,21,26,.96)',toastBg:'rgba(240,242,245,.94)',toastFg:'#1B1F26',overlay:'rgba(0,0,0,.55)'}
 };
 function hexRgb(h,a){const n=parseInt(h.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';}
+/* 品牌字体：优先飞书字体 CDN（国内可访问），失败回退 fontsource CDN */
 const FONTS={
-  default:{name:'默认',font:"'Noto Sans SC','PingFang SC','Microsoft YaHei','Hiragino Sans GB',sans-serif",serif:"'Noto Serif SC','Songti SC','SimSun',serif"},
-  cute:{name:'可爱风',font:"'YouYuan','幼圆','Yuanti SC','Comic Sans MS','Microsoft YaHei',sans-serif",serif:"'YouYuan','幼圆','Yuanti SC',sans-serif"},
-  kai:{name:'手写楷体',font:"'KaiTi','楷体','STKaiti','Kaiti SC',serif",serif:"'KaiTi','楷体','STKaiti',serif"},
-  song:{name:'古典宋体',font:"'SimSun','宋体','STSong','Songti SC',serif",serif:"'Noto Serif SC','Songti SC','SimSun',serif"},
-  yuan:{name:'圆体',font:"'Yuanti SC','YouYuan','幼圆','Microsoft YaHei',sans-serif",serif:"'Yuanti SC','YouYuan','幼圆',sans-serif"}
+  default:{name:'默认',font:"'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif",serif:"'Noto Serif SC','Songti SC','SimSun',serif",gs:'',fs:''},
+  cute:{name:'可爱风',font:"'ZCOOL KuaiLe','Noto Sans SC',sans-serif",serif:"'ZCOOL KuaiLe','Noto Serif SC',serif",gs:'ZCOOL+KuaiLe',fs:'@fontsource/zcool-kuaile'},
+  kai:{name:'手写楷体',font:"'Ma Shan Zheng','KaiTi',serif",serif:"'Ma Shan Zheng','KaiTi',serif",gs:'Ma+Shan+Zheng',fs:'@fontsource/ma-shan-zheng'},
+  song:{name:'古典宋体',font:"'Noto Serif SC','Songti SC',serif",serif:"'Noto Serif SC','Songti SC',serif",gs:'Noto+Serif+SC',fs:'@fontsource/noto-serif-sc'},
+  yuan:{name:'圆体',font:"'ZCOOL QingKe HuangYou','YouYuan',sans-serif",serif:"'ZCOOL QingKe HuangYou','Noto Serif SC',sans-serif",gs:'ZCOOL+QingKe+HuangYou',fs:'@fontsource/zcool-qingke-huangyou'}
 };
+const FONT_LOADED={};
+function ensureFont(k){
+  const f=FONTS[k];
+  if(!f||!f.gs||FONT_LOADED[k])return;
+  FONT_LOADED[k]=true;
+  const l=document.createElement('link');
+  l.rel='stylesheet';
+  l.href='https://miaoda.feishu.cn/fonts/css2?family='+f.gs+'&display=swap';
+  l.onerror=()=>{
+    const l2=document.createElement('link');
+    l2.rel='stylesheet';
+    l2.href='https://cdn.jsdelivr.net/npm/'+f.fs+'/index.css';
+    l2.onerror=()=>{FONT_LOADED[k]=false;if(store.font===k)toast('品牌字体加载失败，已回退默认字体');};
+    document.head.appendChild(l2);
+  };
+  document.head.appendChild(l);
+}
 function applyFont(k,manual){
   const f=FONTS[k]||FONTS.default;
   const s=document.documentElement.style;
   s.setProperty('--font',f.font);
   s.setProperty('--serif',f.serif);
+  ensureFont(k);
   if(manual){store.font=k;save();}
 }
 function setThemeVars(k){
@@ -2152,6 +2173,10 @@ setInterval(updateRemainLive,30000);
 setInterval(refreshAutoDark,60000);
 setThemeVars(effectiveTheme());
 applyFont(store.font);
+/* 移动端锁定缩放（iOS Safari 不认 user-scalable=no，需手势拦截） */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('gesturechange',e=>e.preventDefault());
+document.addEventListener('gestureend',e=>e.preventDefault());
 updateModeUI();
 if(!store.chosen){
   document.getElementById('modeGate').hidden=false;
