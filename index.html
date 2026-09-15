@@ -42,20 +42,30 @@
   --toast-fg:#FFFFFF;
   --overlay:rgba(15,23,42,.42);
 }
+/* ============ APP 化全局样式 ============ */
+html,body{overscroll-behavior:none}
+#tabbar{padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+html,body{margin:0;padding:0;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
-input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink)}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink);-webkit-user-select:text;user-select:text}
 textarea{resize:vertical;min-height:88px}
+img,svg{-webkit-user-drag:none;user-select:none}
 :focus-visible{outline:2px solid var(--seal);outline-offset:2px}
 ::selection{background:var(--seal-soft)}
 mark{background:var(--hl);color:inherit;padding:0 2px;border-radius:3px}
 svg{display:block}
+/* APP 化细滚动条 */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--stroke)}
+::-webkit-scrollbar-track{background:transparent}
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
 /* ============ 应用外壳 ============ */
 #app{max-width:470px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative;box-shadow:0 0 0 1px rgba(16,24,40,.04),0 0 44px rgba(16,24,40,.10)}
-.view{display:none;padding:18px 18px 118px}
+.view{display:none;padding:18px 18px calc(118px + env(safe-area-inset-bottom,0px))}
 .view.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .view.active .card{animation:fadeUp .35s ease both}
@@ -322,12 +332,12 @@ svg{display:block}
 .overlay{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:flex-end;justify-content:center;z-index:90;animation:fadeIn .2s ease both}
 .overlay[hidden]{display:none}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal{background:var(--paper);width:min(470px,100vw);max-height:88vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom));animation:slideUp .28s cubic-bezier(.2,.8,.3,1) both}
+.modal{background:var(--paper);width:min(470px,100vw);max-height:88vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom));animation:slideUp .28s cubic-bezier(.2,.8,.3,1) both;overscroll-behavior:none}
 @keyframes slideUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
 .modal h3{margin:0 0 4px;font-family:var(--serif);font-size:18px;font-weight:700}
 .modal .m-sub{font-size:12px;color:var(--ink3);margin-bottom:16px}
 /* 全屏弹窗（设置） */
-.modal.full{position:fixed;inset:0;width:100vw;max-height:100dvh;height:100dvh;border-radius:0;display:flex;flex-direction:column;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));animation:none}
+.modal.full{position:fixed;inset:0;width:100vw;max-height:100dvh;height:100dvh;border-radius:0;display:flex;flex-direction:column;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));animation:none;overscroll-behavior:none}
 .modal.full .m-close{position:static;flex:none}
 .fs-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:16px}
 .fs-head .m-sub{margin:0}
@@ -458,7 +468,6 @@ svg{display:block}
 }
 
 /* ============ 下拉刷新 ============ */
-html,body{overscroll-behavior-y:contain}
 .ptr{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12.5px;color:var(--ink3);z-index:80;transform:translateY(-64px);transition:transform .22s ease;pointer-events:none;background:linear-gradient(to bottom,var(--bg),transparent)}
 .ptr.show{transform:none}
 .ptr .ptr-spin{width:18px;height:18px;flex:none;color:var(--seal);transition:transform .12s linear;display:flex}
@@ -2455,6 +2464,10 @@ setThemeVars(effectiveTheme());
 applyFont(store.font);
 /* 移动端锁定缩放（iOS Safari 不认 user-scalable=no，需手势拦截） */
 document.addEventListener('gesturestart',e=>e.preventDefault());
+/* 禁用浏览器原生长按/右键菜单（输入框保留系统粘贴菜单） */
+document.addEventListener('contextmenu',e=>{
+  if(!(e.target.closest&&e.target.closest('input,textarea,select,[contenteditable]')))e.preventDefault();
+});
 document.addEventListener('gesturechange',e=>e.preventDefault());
 document.addEventListener('gestureend',e=>e.preventDefault());
 updateModeUI();
