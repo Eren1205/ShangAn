@@ -1810,33 +1810,23 @@ function closeTopLayer(){
 window.addEventListener('popstate',()=>{
   if(pomoState.run){try{history.pushState({lock:true},'');}catch(e){}return;}
   if(closeTopLayer())return;
-  /* 在首页即为根：直接双按退出，不返回任何页面 */
-  if(curView==='home'){
-    appBackStack.length=0;
-    if(!exitArmed){
-      exitArmed=true;
-      toast('再按一次返回，退出桌面');
-      setTimeout(()=>{exitArmed=false;},2500);
-    }else{
-      try{
-        if(window.AndroidBridge&&window.AndroidBridge.exitApp){window.AndroidBridge.exitApp();}
-        else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.exitApp){window.webkit.messageHandlers.exitApp.postMessage(null);}
-        else if(navigator.app&&navigator.app.exitApp){navigator.app.exitApp();}
-        else{window.close();}
-      }catch(e){}
-      toast('即将退出');
-    }
-    try{history.pushState({a:Date.now()},'');}catch(e){}
-    return;
+  /* 无子层：任何主 tab 都双按退出，不回上一页 */
+  appBackStack.length=0;
+  if(!exitArmed){
+    exitArmed=true;
+    toast('再按一次返回，退出桌面');
+    setTimeout(()=>{exitArmed=false;},2500);
+  }else{
+    try{
+      if(window.AndroidBridge&&window.AndroidBridge.exitApp){window.AndroidBridge.exitApp();}
+      else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.exitApp){window.webkit.messageHandlers.exitApp.postMessage(null);}
+      else if(navigator.app&&navigator.app.exitApp){navigator.app.exitApp();}
+      else{window.close();}
+    }catch(e){}
+    toast('即将退出');
   }
-  const top=topAppState();
-  if(top&&top.type==='view'){showView(top.from);appBackStack.pop();return;}
-  if(!top){
-    /* 非首页但栈空：退回首页 */
-    showView('home');
-    return;
-  }
-  popAppState();
+  try{history.pushState({a:Date.now()},'');}catch(e){}
+  return;
 });
 
 /* ==================== 视图切换 ==================== */
@@ -2118,11 +2108,12 @@ function startPomo(){
       lp.style.clipPath='inset('+r.top+'px '+(W-r.right)+'px '+(H-r.bottom)+'px '+r.left+'px round 16px)';
     }
     lp.classList.add('on');
-    requestAnimationFrame(function(){requestAnimationFrame(function(){
+    void lp.offsetWidth;
+    setTimeout(function(){
       lp.style.transition='clip-path .72s cubic-bezier(.4,0,.2,1)';
       lp.style.clipPath='inset(0 0 0 0 round 0)';
       setTimeout(function(){lp.classList.add('content-in');},360);
-    });});
+    },60);
   }
   $('#lockLeave')&&$('#lockLeave').classList.remove('on');
   lockStackPushed=true;history.pushState({lock:true},'');
@@ -2867,6 +2858,7 @@ function cropConfirm(){
       const n=st.queue.length;
       const doneCtx=st.ctx;
       closeCrop();
+      if(doneCtx==='avatar')closeModal();
       toast(doneCtx==='avatar'?'头像已更新':(n>1?'已添加 '+n+' 张图片':'已添加 1 张图片'));
     }
   });
@@ -3198,13 +3190,13 @@ function updateSetProfile(){
   stage.addEventListener('touchstart',e=>{
     if(!cropState)return;
     if(e.touches.length===1)touch={t:1,x:e.touches[0].clientX,y:e.touches[0].clientY,tx:cropState.tx,ty:cropState.ty};
-    else if(e.touches.length>=2){const a=e.touches[0],b=e.touches[1];touch={t:2,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),s:cropState.scale,tx:cropState.tx,ty:cropState.ty};}
+    else if(e.touches.length>=2){const a=e.touches[0],b=e.touches[1];const r=stage.getBoundingClientRect();const cx=(a.clientX+b.clientX)/2-r.left,cy=(a.clientY+b.clientY)/2-r.top;touch={t:2,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),s:cropState.scale,cx:cx,cy:cy,ox:(cx-cropState.tx)/cropState.scale,oy:(cy-cropState.ty)/cropState.scale};}
   },{passive:true});
   stage.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(!cropState||!touch)return;
     if(touch.t===1&&e.touches.length===1){const t=e.touches[0];cropState.tx=touch.tx+(t.clientX-touch.x);cropState.ty=touch.ty+(t.clientY-touch.y);cropApply();}
-    else if(e.touches.length>=2){const a=e.touches[0],b=e.touches[1];const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(touch.d>0)cropState.scale=Math.min(8,Math.max(0.3,touch.s*d/touch.d));cropApply();}
+    else if(e.touches.length>=2){const a=e.touches[0],b=e.touches[1];const r=stage.getBoundingClientRect();const cx=(a.clientX+b.clientX)/2-r.left,cy=(a.clientY+b.clientY)/2-r.top;const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(touch.d>0){cropState.scale=Math.min(8,Math.max(0.3,touch.s*d/touch.d));cropState.tx=cx-touch.ox*cropState.scale;cropState.ty=cy-touch.oy*cropState.scale;}cropApply();}
   },{passive:false});
   stage.addEventListener('touchend',()=>{touch=null;});
   stage.addEventListener('mousedown',e=>{
