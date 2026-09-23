@@ -2179,16 +2179,29 @@ function doCheckin(){
 }
 
 /* ==================== 番茄钟 ==================== */
-let pomoState={dur:25,remain:1500,run:false,timer:null,startTs:null,paused:false,wakeLock:null};
+let pomoState={
+  dur:25, remain:1500, run:false, timer:null, startTs:null, paused:false, wakeLock:null,
+  // 计划模式
+  plan:false, // 是否开启计划模式
+  planStart:'08:00', // 计划开始时间
+  planEnd:'12:00', // 计划结束时间
+  planWork:50, // 学习时长（分钟）
+  planBreak:10, // 休息时长（分钟）
+  phase:'work', // 当前阶段：work 或 break
+  cycleCount:0 // 已完成的循环数
+};
 let lockStackPushed=false;
 function renderPomo(){
   const s=pomoState;
   const mm=String(Math.floor(s.remain/60)).padStart(2,'0'),ss=String(s.remain%60).padStart(2,'0');
+  const phaseText = s.plan ? (s.phase==='work'?'专注中':'休息中') : '';
   $('#pomoCard').innerHTML=
     '<div class="pomo-l">'+
-    '<div class="pomo-lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8Z"/><path d="M12 2v2M9.5 21h5M12 15v6"/></svg>番茄钟 · 专注计时</div>'+
+    '<div class="pomo-lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8Z"/><path d="M12 2v2M9.5 21h5M12 15v6"/></svg>番茄钟 · '+(phaseText||'专注计时')+'</div>'+
     '<div class="pomo-time" '+(s.run?'':'data-act="pomo-cycle" title="点击切换时长"')+'>'+(s.run?mm+':'+ss:s.dur)+(s.run?'':'<small>分钟</small>')+'</div>'+
-    (s.run?'':'<div class="pomo-opts">'+[15,25,45,60].map(n=>'<button type="button" class="pomo-opt'+(s.dur===n?' on':'')+'" data-act="pomo-dur" data-pomo-dur="'+n+'">'+n+'</button>').join('')+'</div>')+
+    (s.run?'':'<div class="pomo-opts">'+[15,25,45,60].map(n=>'<button type="button" class="pomo-opt'+(s.dur===n?' on':'')+'" data-act="pomo-dur" data-pomo-dur="'+n+'">'+n+'</button>').join('')+
+    '<button type="button" class="pomo-opt" data-act="pomo-plan" style="margin-left:4px">📅 计划</button>'+
+    '</div>')+
     '</div>'+
     '<button class="pomo-btn'+(s.run?' running':'')+'" data-act="pomo-toggle" aria-label="'+(s.run?'结束番茄钟':'开始番茄钟')+'">'+(s.run?'结束':'开始')+'</button>';
 }
@@ -2198,15 +2211,124 @@ function pomoTick(){
   // 用 Date.now() 计算时间差，避免息屏后 setInterval 暂停导致计时不准
   const elapsed=Math.floor((Date.now()-s.startTs)/1000);
   s.remain=Math.max(0,s.dur*60-elapsed);
-  if(s.remain<=0){s.remain=0;endPomo(true);return;}
+  if(s.remain<=0){
+    // 计划模式：自动切换工作/休息
+    if(s.plan){
+      if(s.phase==='work'){
+        // 工作结束，切换到休息
+        s.phase='break';
+        s.dur=s.planBreak;
+        s.remain=s.dur*60;
+        s.startTs=Date.now();
+        toast('休息一下吧');
+      } else {
+        // 休息结束，切换到工作
+        s.phase='work';
+        s.dur=s.planWork;
+        s.remain=s.dur*60;
+        s.startTs=Date.now();
+        s.cycleCount++;
+        toast('开始第'+(s.cycleCount+1)+'个番茄');
+      }
+    } else {
+      s.remain=0;endPomo(true);return;
+    }
+  }
   const mt=$('#pomoCard .pomo-time');
   if(mt)mt.textContent=String(Math.floor(s.remain/60)).padStart(2,'0')+':'+String(s.remain%60).padStart(2,'0');
   updLockClock();
 }
+
+// 计划模式：每分钟检查一次是否到了开始时间
+function planCheck(){
+  const s=pomoState;
+  if(!s.plan||s.run)return;
+  
+  const now=new Date();
+  const nowStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  
+  // 到了开始时间，自动开始
+  if(nowStr>=s.planStart && nowStr<s.planEnd){
+    startPomo();
+    toast('计划开始，加油！');
+  }
+}
+
+// 启动计划检查定时器
+setInterval(planCheck, 60000); // 每分钟检查一次
+// 打开计划设置
+function openPomoPlan(){
+  const s=pomoState;
+  openModal(
+    '<h3>番茄钟计划</h3><div class="m-sub">设置自动循环的学习计划</div>'+
+    '<div class="fld">'+
+    '<label>开始时间</label>'+
+    '<input type="time" id="planStart" value="'+s.planStart+'">'+
+    '</div>'+
+    '<div class="fld">'+
+    '<label>结束时间</label>'+
+    '<input type="time" id="planEnd" value="'+s.planEnd+'">'+
+    '</div>'+
+    '<div class="fld">'+
+    '<label>学习时长（分钟）</label>'+
+    '<input type="number" id="planWork" value="'+s.planWork+'" min="5" max="120">'+
+    '</div>'+
+    '<div class="fld">'+
+    '<label>休息时长（分钟）</label>'+
+    '<input type="number" id="planBreak" value="'+s.planBreak+'" min="1" max="60">'+
+    '</div>'+
+    '<div class="fld">'+
+    '<label style="display:flex;align-items:center;gap:8px;cursor:pointer">'+
+    '<input type="checkbox" id="planEnabled" style="width:auto"'+(s.plan?' checked':'')+'>'+
+    '启用计划模式'+
+    '</label>'+
+    '</div>'+
+    '<div class="m-actions">'+
+    '<button class="btn-sec" data-act="close-modal">取消</button>'+
+    '<button class="btn-main" data-act="save-pomo-plan">保存计划</button>'+
+    '</div>'
+  );
+}
+
+// 保存计划
+function savePomoPlan(){
+  const s=pomoState;
+  s.planStart=document.getElementById('planStart').value;
+  s.planEnd=document.getElementById('planEnd').value;
+  s.planWork=parseInt(document.getElementById('planWork').value)||50;
+  s.planBreak=parseInt(document.getElementById('planBreak').value)||10;
+  s.plan=document.getElementById('planEnabled').checked;
+  if(s.plan){
+    s.dur=s.planWork;
+  }
+  closeModal();
+  renderPomo();
+}
+
+// 计划模式：自动切换工作/休息
+function planTick(){
+  const s=pomoState;
+  if(!s.plan||!s.run)return;
+  
+  // 检查是否到了结束时间
+  const now=new Date();
+  const nowStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  if(nowStr>=s.planEnd){
+    endPomo(true);
+    return;
+  }
+}
+
 function startPomo(){
   const s=pomoState;
   if(s.run)return;
-  s.run=true;s.paused=false;s.remain=s.dur*60;s.startTs=Date.now();
+  s.run=true;s.paused=false;
+  if(s.plan){
+    s.phase='work';
+    s.dur=s.planWork;
+    s.cycleCount=0;
+  }
+  s.remain=s.dur*60;s.startTs=Date.now();
   if(s.timer)clearInterval(s.timer);
   s.timer=setInterval(pomoTick,1000);
   /* 共享元素：番茄钟卡片放大全屏 */
@@ -2929,8 +3051,10 @@ function cropApply(){
   /* transform-origin:center，所以图片中心 = (left + 宽/2, top + 高/2) */
   /* 让中心 = (tx, ty) */
   if(im){
-    im.style.left=(st.tx-im.offsetWidth/2)+'px';
-    im.style.top=(st.ty-im.offsetHeight/2)+'px';
+    const scaledW = im.offsetWidth * st.scale;
+    const scaledH = im.offsetHeight * st.scale;
+    im.style.left=(st.tx-scaledW/2)+'px';
+    im.style.top=(st.ty-scaledH/2)+'px';
     im.style.transform='scale('+st.scale+') rotate('+st.rot+'deg)';
   }
   const z=$('#cropZoomVal');if(z)z.textContent='100%';
@@ -2973,10 +3097,15 @@ function cropOutput(cb){
   g.fillStyle='#FFFFFF';g.fillRect(0,0,OW,OH);
   if(st.ratio==='circle'){g.save();g.beginPath();g.arc(OW/2,OH/2,Math.min(OW,OH)/2,0,Math.PI*2);g.clip();}
   /* 和显示时的变换完全一致 */
+  /* 计算 fitScale：和 cropFit 里的计算一致 */
+  const iw=st.rot%180?st.nh:st.nw, ih=st.rot%180?st.nw:st.nh;
+  const vs=st.ratio==='circle'?1:(st.ratio>0?st.ratio:(iw/ih));
+  let fw=st.fw,fh=st.fh;
+  const fitScale = Math.max(fw/iw, fh/ih);
   g.save();
   g.translate(OW/2,OH/2);
   g.rotate(rad);
-  g.scale(s,s);
+  g.scale(fitScale*s,fitScale*s);
   /* 图片中心相对于裁剪框中心的偏移 */
   const cx=st.tx-(st.fx+st.fw/2);
   const cy=st.ty-(st.fy+st.fh/2);
@@ -4251,6 +4380,8 @@ document.addEventListener('click',e=>{
     else if(act==='pomo-toggle'){if(pomoState.run){/* 锁定中禁止结束 */}else{askStartPomo();}}
     else if(act==='pomo-cycle'){cyclePomoDur();}
     else if(act==='pomo-dur'){const n=+el.dataset.pomoDur;if(n>0&&!pomoState.run){pomoState.dur=n;pomoState.remain=n*60;renderPomo();}}
+    else if(act==='pomo-plan'){openPomoPlan();}
+    else if(act==='save-pomo-plan'){savePomoPlan();}
     else if(act==='refresh-quote'){try{localStorage.removeItem('gk_aiq_'+todayStr());}catch(e){}const el=$('#qText');if(el)el.textContent='…';aiQuote().then(q=>{if(store.homeCard==='tip')return;const el2=$('#qText');if(el2)el2.textContent=q;});}
     else if(act==='next-tip'){renderQuote();}
     else if(act==='checkin')doCheckin();
