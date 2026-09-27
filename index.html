@@ -50,7 +50,7 @@ html,body{overscroll-behavior:none}
 #tabbar{padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;height:100%;overflow:hidden;position:fixed;left:0;top:0;width:100%;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none;-webkit-overscroll-behavior:none;overscroll-behavior-x:none;overscroll-behavior-y:none}
-body{background:linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--bg) 84%,var(--seal) 8%));color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{background:linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--bg) 84%,var(--seal) 8%));color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;text-shadow:0 1px 0 rgba(255,255,255,.08)}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
 input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink);-webkit-user-select:text;user-select:text}
 textarea{resize:vertical;min-height:88px}
@@ -106,7 +106,7 @@ svg{display:block}
 .gate-foot{font-size:11px;color:var(--ink3);margin-top:18px;line-height:1.6}
 
 /* ============ 卡片 ============ */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.03),0 6px 22px rgba(16,24,40,.055);-webkit-backdrop-filter:blur(var(--ui-blur,14px));backdrop-filter:blur(var(--ui-blur,14px))}
+.card{background:color-mix(in srgb, var(--surface) 92%, transparent);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.03),0 6px 22px rgba(16,24,40,.055);-webkit-backdrop-filter:blur(var(--ui-blur,14px)) saturate(1.3);backdrop-filter:blur(var(--ui-blur,14px)) saturate(1.3)}
 .n-card,.rv-card,.eb-item,.modal,.post-body,.gate-card,.search,.up-btn,.start-card{ -webkit-backdrop-filter:blur(var(--ui-blur,14px));backdrop-filter:blur(var(--ui-blur,14px)) }
 html[data-style="soft"] .card,html[data-style="soft"] .n-card,html[data-style="soft"] .rv-card,html[data-style="soft"] .eb-item,html[data-style="soft"] .modal,html[data-style="soft"] .gate-card,html[data-style="soft"] .search,html[data-style="soft"] .up-btn,html[data-style="soft"] .start-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 28px rgba(16,24,40,.09)}
 html[data-style="soft"] .post-body{box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
@@ -433,8 +433,8 @@ html[data-style="frost"] .card,html[data-style="frost"] .n-card,html[data-style=
 .dp-col-lb{font-size:11px;color:var(--ink3);display:block;margin-bottom:2px;letter-spacing:2px}
 .dp-roller{height:200px;overflow-y:auto;scrollbar-width:none;position:relative;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .dp-roller::-webkit-scrollbar{display:none}
-.dp-ri{height:40px;line-height:40px;font-size:15px;color:var(--ink3);cursor:pointer;transition:color .15s,font-size .15s;padding:0 4px}
-.dp-ri.on{color:var(--ink);font-weight:700;font-size:17px}
+.dp-ri{height:40px;line-height:40px;font-size:15px;color:var(--ink3);cursor:pointer;transition:color .15s,font-size .15s;padding:0 4px;text-shadow:none}
+.dp-ri.on{color:var(--ink);font-weight:700;font-size:17px;text-shadow:0 1px 2px rgba(0,0,0,.08)}
 .dp-mask{position:absolute;left:4px;right:4px;top:104px;height:40px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);pointer-events:none;opacity:.7}
 
 /* ============ 个人资料 ============ */
@@ -503,6 +503,7 @@ html[data-style="frost"] .card,html[data-style="frost"] .n-card,html[data-style=
 .overlay{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:flex-end;justify-content:center;z-index:160;animation:fadeIn .2s ease both;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .overlay[hidden]{display:none}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:translate(-50%,-50%) scale(.9)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .modal{background:linear-gradient(180deg,var(--paper),var(--paper) 92%,color-mix(in srgb,var(--paper) 96%,var(--ink3) 4%));width:min(470px,100vw);max-height:88vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:22px 22px calc(26px + env(safe-area-inset-bottom));animation:slideUp .3s cubic-bezier(.2,.8,.3,1) both;overscroll-behavior:contain;box-shadow:0 -14px 46px rgba(8,14,26,.2),inset 0 1px 0 rgba(255,255,255,.4);scrollbar-width:thin;overflow-anchor:none}
 @keyframes slideUp{from{transform:translateY(44px);opacity:.5}to{transform:none;opacity:1}}
 .modal h3{margin:0 0 4px;font-family:var(--serif);font-size:18px;font-weight:700}
@@ -784,10 +785,11 @@ div.pf-row:active{background:none}
 .dp-field i{display:flex;align-items:center;color:var(--ink3);font-style:normal;flex:none}
 .dp-field i svg{width:16px;height:16px}
 .dp-field:active{border-color:var(--seal);background:var(--seg)}
-.dp-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:8px;animation:fadeIn .18s ease both}
+.dp-box{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.3);border-radius:18px;padding:20px;z-index:1000;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:scaleIn .2s ease both;max-width:90vw;width:320px}
+.dp-box-mask{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:999;animation:fadeIn .18s ease both}
 .dp-box .dp-picker{display:flex;gap:10px}
 .dp-box-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
-.dp-box-actions .btn-sec,.dp-box-actions .btn-main{padding:8px 16px;font-size:13px;border-radius:10px}
+.dp-box-actions .btn-sec,.dp-box-actions .btn-main{padding:8px 16px;font-size:13px;border-radius:10px;margin-top:0;align-items:center;display:inline-flex;justify-content:center}
 .fld .auto-times .dp-box .dp-picker .pf-pick-win{height:130px}
 .auto-times .fld{margin:0}
 .pf-pick-row{display:flex;gap:8px}
@@ -3267,42 +3269,104 @@ function rollerHtml(col,cur,min,max){
 let dpRebuilding=false;
 function bindDpRoller(r,col,min,max,box){
   var t;
-  function settle(){
-    if(dpRebuilding)return;
+  var lastV=null;
+  
+  function getCenterV(){
     var off=Math.round(r.scrollTop/40);
+    // 选中项在滚动列表里的索引 = off + 2
+    // 真实项 v 对应的索引 = v - min + 2
+    // 所以 v - min + 2 = off + 2 => v = min + off
     var v=min+off;
     v=Math.min(max,Math.max(min,v));
-    if(v!==dpState[col]){
+    return v;
+  }
+  
+  function updateHighlight(v){
+    // 更新高亮
+    r.querySelectorAll('.dp-ri').forEach(function(it){it.classList.toggle('on',+it.dataset.v===v);});
+  }
+  
+  function onScroll(){
+    if(dpRebuilding)return;
+    
+    // 实时更新高亮
+    var v=getCenterV();
+    if(v!==lastV){
+      lastV=v;
+      updateHighlight(v);
+    }
+    
+    // 滚动停止后自动吸附
+    clearTimeout(t);
+    t=setTimeout(function(){
+      if(dpRebuilding)return;
+      var v=getCenterV();
       dpState[col]=v;
+      
+      // 自动滚动到居中位置
+      var targetScrollTop=(v-min)*40;
+      if(Math.abs(r.scrollTop-targetScrollTop)>1){
+        r.scrollTo({top:targetScrollTop,behavior:'smooth'});
+      }
+      
+      // 如果是年或月，重建整个选择器更新日的天数
       if(col==='y'||col==='m'){
         var dm=daysInMonth(dpState.y,dpState.m);
         if(dpState.d>dm)dpState.d=dm;
-        /* 重建整个选择器，避免单独 rebuild 日期列导致定位不准 */
         var rid=box.id.replace('Box','');
         dpRebuilding=true;
-        dpRender(rid);
-        setTimeout(function(){dpRebuilding=false;},300);
-        return;
+        setTimeout(function(){
+          dpRender(rid);
+          dpRebuilding=false;
+        },300);
       }
-    }
-    r.querySelectorAll('.dp-ri').forEach(function(it){it.classList.toggle('on',+it.dataset.v===v);});
+    },100);
   }
-  r.addEventListener('scroll',function(){
-    if(dpRebuilding)return;
-    clearTimeout(t);
-    t=setTimeout(settle,90);
-  });
+  
+  r.addEventListener('scroll',onScroll);
+  
   r.addEventListener('click',function(e){
     var it=e.target.closest('.dp-ri');if(!it)return;
     var v=+it.dataset.v;
-    r.scrollTo({top:(v-min)*40,behavior:'smooth'});
+    v=Math.min(max,Math.max(min,v));
+    
+    // 立即更新状态和高亮
+    dpState[col]=v;
+    lastV=v;
+    updateHighlight(v);
+    
+    // 平滑滚动到居中位置
+    var targetScrollTop=(v-min)*40;
+    r.scrollTo({top:targetScrollTop,behavior:'smooth'});
+    
+    // 如果是年或月，更新日的天数
+    if(col==='y'||col==='m'){
+      var dm=daysInMonth(dpState.y,dpState.m);
+      if(dpState.d>dm)dpState.d=dm;
+      var rid=box.id.replace('Box','');
+      dpRebuilding=true;
+      setTimeout(function(){
+        dpRender(rid);
+        dpRebuilding=false;
+      },300);
+    }
   });
 }
 function dpRender(id){
   const box=$('#'+id+'Pick');if(!box)return;
   const curY=new Date().getFullYear();
-  const ymin=(id==='birth')?1960:curY;
-  const ymax=(id==='birth')?curY:curY+5;
+  // 不同日期的年份范围
+  let ymin, ymax;
+  if(id==='birth'||id==='exStart'||id==='ebDate'||id==='revDate'){
+    // 生日、备考开始日期、学习日期、筛选日期：可以选 1960 到当前年
+    ymin=1960; ymax=curY;
+  }else if(id==='exDate'){
+    // 考试日期：可以选当前年到当前年+5
+    ymin=curY; ymax=curY+5;
+  }else{
+    // 其他情况：默认 1960 到当前年+5
+    ymin=1960; ymax=curY+5;
+  }
   var y=dpState.y;if(y<ymin)y=ymin;if(y>ymax)y=ymax;dpState.y=y;
   const m=dpState.m,d=dpState.d,dmax=daysInMonth(y,m);
   if(dpState.d>dmax)dpState.d=dmax;
@@ -3313,6 +3377,7 @@ function dpRender(id){
     '<div class="dp-mask"></div>';
   var yr=box.querySelector('.dp-roller[data-col="y"]'),mr=box.querySelector('.dp-roller[data-col="m"]'),dr=box.querySelector('.dp-roller[data-col="d"]');
   requestAnimationFrame(function(){
+    // 视口显示 5 个项，选择框在第 3 个项的位置（视口索引 2）
     yr.scrollTop=(y-ymin)*40;
     mr.scrollTop=(m-1)*40;
     dr.scrollTop=(d-1)*40;
@@ -3332,6 +3397,16 @@ function dpOpen(id){
   else{const t=new Date();dpState.y=t.getFullYear();dpState.m=t.getMonth()+1;dpState.d=t.getDate();}
   dpRender(id);
   document.querySelectorAll('.dp-box').forEach(b=>{b.hidden=b.id!==id+'Box';});
+  // 把弹窗移到 body 下面，避免受父元素 transform 影响
+  const box=document.getElementById(id+'Box');
+  if(box)document.body.appendChild(box);
+  // 显示遮罩
+  if(!document.querySelector('.dp-box-mask')){
+    const mask=document.createElement('div');
+    mask.className='dp-box-mask';
+    mask.onclick=function(){dpCancel(id);};
+    document.body.appendChild(mask);
+  }
 }
 function tpOpen(id){
   const p=(dpVals[id]||'').split(':');
@@ -3339,10 +3414,22 @@ function tpOpen(id){
   tpState.m=p.length>1?Math.min(59,Math.max(0,+p[1]||0)):0;
   tpRender(id);
   document.querySelectorAll('.dp-box').forEach(b=>{b.hidden=b.id!==id+'Box';});
+  // 把弹窗移到 body 下面
+  const box=document.getElementById(id+'Box');
+  if(box)document.body.appendChild(box);
+  // 显示遮罩
+  if(!document.querySelector('.dp-box-mask')){
+    const mask=document.createElement('div');
+    mask.className='dp-box-mask';
+    mask.onclick=function(){tpCancel(id);};
+    document.body.appendChild(mask);
+  }
 }
 function dpDone(id){
   const ds=dpState.y+'-'+pad(dpState.m)+'-'+pad(dpState.d);
   dpVals[id]=ds;
+  // 隐藏遮罩
+  const mask=document.querySelector('.dp-box-mask');if(mask)mask.remove();
   if(id==='revDate'){
     revFilterDate=ds||'';
     const f=$('#revFilterFld');if(f)f.textContent=revFilterDate?revFilterDate.replace(/-/g,'/'):'请选择日期';
@@ -3357,10 +3444,12 @@ function dpDone(id){
 function tpDone(id){
   const ts=pad(tpState.h)+':'+pad(tpState.m);
   dpVals[id]=ts;
+  // 隐藏遮罩
+  const mask=document.querySelector('.dp-box-mask');if(mask)mask.remove();
   const f=$('#'+id+'Fld');if(f)f.innerHTML=tpTxt(ts)+'<i>'+TP_ICO+'</i>';
   const b=$('#'+id+'Box');if(b)b.hidden=true;
 }
-function dpCancel(id){const b=$('#'+id+'Box');if(b)b.hidden=true;}
+function dpCancel(id){const b=$('#'+id+'Box');if(b)b.hidden=true;const mask=document.querySelector('.dp-box-mask');if(mask)mask.remove();}
 
 function pfPickerHtml(){
   const y=pfBirth.y,m=pfBirth.m,ymax=new Date().getFullYear();
