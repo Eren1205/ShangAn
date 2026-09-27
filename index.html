@@ -358,8 +358,8 @@ html[data-style="frost"] .card,html[data-style="frost"] .n-card,html[data-style=
 .post-body{flex:1;overflow-y:auto;padding:0 0 40px;overscroll-behavior:contain;-webkit-overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .post-hero{position:relative;background:var(--seg);overflow:hidden;touch-action:pan-y}
 .post-viewport{overflow:hidden;width:100%;height:200px;background:var(--seg);display:flex;align-items:center;justify-content:center}
-.post-track{display:flex;height:100%;width:100%;transition:transform .35s cubic-bezier(.2,.8,.3,1)}
-.post-track img{flex-shrink:0;max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto}
+.post-track{display:flex;height:100%;transition:transform .35s cubic-bezier(.2,.8,.3,1)}
+.post-track img{flex-shrink:0;width:100%;height:100%;object-fit:contain;display:block}
 .ph-nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(8,14,26,.42);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background .15s}
 .ph-nav:hover{background:rgba(8,14,26,.66)}
 .ph-nav svg{width:20px;height:20px}
@@ -923,7 +923,6 @@ div.pf-row:active{background:none}
           <div id="miniTodo"></div>
           <button class="link-more" data-act="go-tasks">查看全部任务</button>
         </div>
-        <div class="card checkin-card" id="checkinCard"></div>
       </div>
     </div>
   </section>
@@ -2118,7 +2117,7 @@ function renderHomeStats(){
   $('#homeStats').innerHTML=
     '<div class="s3"><div class="n">'+Math.floor(tMin/60)+'<small>h</small>'+(tMin%60?'<small>'+String(tMin%60).padStart(2,'0')+'m</small>':'')+'</div><div class="l">今日专注</div></div>'+
     '<div class="s3"><div class="n">'+(done+ebC.done)+'<small> / '+(ts.length+ebC.due)+'</small></div><div class="l">任务完成</div></div>'+
-    '<div class="s3"><div class="n" style="color:var(--seal)">'+streak()+'<small>天</small></div><div class="l">连续打卡</div></div>';
+    '<div class="s3"><div class="n" style="color:var(--seal)">'+ebC.due+'<small>项</small></div><div class="l">待复习</div></div>';
 }
 function renderMiniTodo(){
   const all=todayTasks();
@@ -2132,6 +2131,7 @@ function renderMiniTodo(){
 }
 let calY=null,calM=null; // null = 当前月
 function renderCheckin(){
+  if(!$('#checkinCard'))return; // 打卡日历已移除
   const t=new Date();
   const y=calY??t.getFullYear(),m=calM??t.getMonth();
   const isCur=(y===t.getFullYear()&&m===t.getMonth());
@@ -2618,7 +2618,6 @@ function renderStatsView(){
     '<div class="stat-card"><span class="ico" style="background:rgba(178,125,43,.14);color:#B07D2B"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15V9M12 15V6M16 15v-4"/></svg></span><div><div class="n">'+Math.floor(s.dur/60)+'<small>h</small>'+(s.dur%60?'<small>'+s.dur%60+'m</small>':'')+'</div><div class="l">任务用时</div></div></div>';
   $('#statsMini').innerHTML=
     '<span>完成任务 <b>'+s.done+' / '+s.total+'</b>'+(s.total?' · '+Math.round(s.done/s.total*100)+'%':'')+'</span>'+
-    '<span>打卡 <b>'+s.checkinN+'</b> 天</span>'+
     '<span>复习完成 <b>'+s.ebDoneN+'</b> 轮</span>';
   const agg=moduleStats(ri.start,ri.end);
   const items=Object.keys(agg).map(k=>({k,...agg[k]})).sort((a,b)=>b.qty-a.qty);
@@ -3535,9 +3534,25 @@ function updateSetProfile(){
 function openLightbox(src){
   const lb=$('#lightbox'),im=$('#lightboxImg');
   if(!lb||!im||!src)return;
-  lb.hidden=false;
-  im.onload=()=>{lbReset();};
+  // 先隐藏 lightbox，等图片定位好再显示
+  lb.hidden=true;
+  lbScale=1;lbTx=0;lbTy=0;
+  im.style.transition='none';
+  im.onload=()=>{
+    // 图片加载完成，无动画居中
+    lbReset();
+    // 恢复 transition
+    im.style.transition='transform .25s ease';
+    // 显示 lightbox
+    lb.hidden=false;
+  };
   im.src=src;
+  // 如果图片已经缓存，onload 可能不触发，手动处理
+  if(im.complete && im.naturalWidth){
+    lbReset();
+    im.style.transition='transform .25s ease';
+    lb.hidden=false;
+  }
   pushAppState({type:'lightbox'});
 }
 function closeLightbox(){
@@ -4080,7 +4095,6 @@ function setSubHtml(name){
   if(name==='notify')return '<div class="set-sub-pad">'+
     '<div class="fld"><div class="set-head"><label>通知开关</label>'+INFO_ICO_BTN.replace('##ID##','notifyNote')+'</div><div class="theme-top">'+SET_SWITCH('notifyChk','data-notify','总开关')+'</div></div>'+
     '<div id="notifySubs" hidden>'+
-    '<div class="fld"><div class="theme-top">'+SET_SWITCH('remindChk','data-remind','每日打卡提醒')+'</div><div class="auto-times" id="remindTimes">'+tpFieldHtml('remindT','20:00','提醒时间')+'</div></div>'+
     '<div class="fld"><div class="theme-top">'+SET_SWITCH('pomoChk','data-pomo','番茄钟完成提醒')+'</div></div>'+
     '<div class="fld"><div class="theme-top">'+SET_SWITCH('taskChk','data-task','任务到点提醒')+'</div></div>'+
     '</div>'+
@@ -4150,17 +4164,7 @@ function renderSettings(){
 }
 function checkReminder(){
   try{
-    const rm=store.remind||{on:false,time:'20:00'};
-    if(!store.notify||!store.notify.on||!rm.on)return;
-    if(!('Notification' in window)||Notification.permission!=='granted')return;
-    if(app.checkins.includes(todayStr()))return;
-    const today=todayStr();
-    if(store.remindSent===today)return;
-    const nowH=new Date().getHours(),nowM=new Date().getMinutes();
-    const hh=(nowH<10?'0':'')+nowH,mm=(nowM<10?'0':'')+nowM;
-    if(hh+':'+mm<rm.time)return;
-    store.remindSent=today;save();
-    sysNotify('上岸助手','今天还没有打卡，别忘了记录今日的学习进度，坚持就是胜利！','daily-checkin');
+    // 打卡提醒已移除
   }catch(e){}
 }
 function checkTaskReminders(){
