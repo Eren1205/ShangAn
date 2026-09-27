@@ -2848,13 +2848,14 @@ function profileNick(){
   return pf.nick?escapeHtml(pf.nick):(store.mode==='kaoyan'?'考研人':'考公人');
 }
 function revCardHtml(r){
-  const st='★★★★★'.slice(0,r.rating||0);
   const imgs=r.imgs||[];
-  const dStr=(r.date||'').replace(/-/g,'/');
+  const dStr=(r.date||'未知日期').replace(/-/g,'/');
+  let weekStr='';
+  try{if(r.date)weekStr='· 周'+WEEK_CN[parseD(r.date).getDay()];}catch(e){}
   return '<div class="rv-card'+(imgs.length?'':' pure')+'" data-act="open-post" data-id="'+r.id+'">'+
     (imgs.length?'<div class="rc-cover"><img src="'+imgs[0]+'" alt="复盘图片" loading="lazy"><span class="rc-stamp">'+'★'.repeat(r.rating||0)+'</span></div>':'')+
     '<div class="rc-body">'+
-    '<div class="rc-date"><b>'+dStr+'</b>· 周'+WEEK_CN[parseD(r.date).getDay()]+'<span class="rc-mood">'+moodOf(r.mood).e+'</span></div>'+
+    '<div class="rc-date"><b>'+dStr+'</b>'+weekStr+'<span class="rc-mood">'+moodOf(r.mood).e+'</span></div>'+
     '<div class="rc-txt">'+escapeHtml((r.gain||'今天也在认真复盘').slice(0,60))+'</div>'+
     '<div class="rc-more"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>查看详情</div>'+
     '</div></div>';
@@ -2919,7 +2920,7 @@ function openPostPage(id){
         '<button class="ph-nav ph-prev" data-act="post-prev" aria-label="上一张"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>'+
         '<button class="ph-nav ph-next" data-act="post-next" aria-label="下一张"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>'+
         '<span class="ph-dots" id="postImgDots">'+imgs.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join('')+'</span>':'')+
-      '<span class="ph-date">'+r.date.replace(/-/g,'/')+' · 周'+WEEK_CN[parseD(r.date).getDay()]+'</span></div>':'')+
+      '<span class="ph-date">'+(r.date||'未知日期').replace(/-/g,'/')+'</span></div>':'')+
     '<div class="post-meta"><span class="pm-avatar">'+profileAvatar()+'</span>'+
     '<div><div class="pm-name">'+profileNick()+'</div><div class="pm-sub">专注 '+fmtMin(r.focusMin||0)+' · 任务 '+r.tasksDone+'/'+r.tasksTotal+'</div></div>'+
     '<span class="pm-stars">'+'★'.repeat(r.rating||0)+'</span></div>'+
